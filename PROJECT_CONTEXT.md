@@ -1,0 +1,291 @@
+# Project Context
+
+## Current Goal
+
+This project models a simplified isolated three-phase AC generator in open loop
+for both speed and voltage. The present default case is intended to make the
+rotor-reference slip visible over a long transient with three load changes.
+
+Default selected simulation:
+
+```text
+CONTROL_MODE = "unregulated"
+D = 0.0
+speed loop = open loop
+voltage loop = open loop
+AVR = not modeled
+field current = constant
+mechanical input = constant
+E = K_e If omega_pu
+```
+
+Initial operating point:
+
+```text
+f(0) = 60 Hz
+omega_pu(0) = 1.0
+V_terminal_LL_RMS(0) = 400 V
+If(0) = 1.0 pu
+initial load = 0.50 pu
+Pm(0) = Pe(0)
+```
+
+Default load schedule:
+
+```text
+t = 0 s:    load = 0.50 pu
+t = 10 s:   load = 0.80 pu
+t = 40 s:   load = 0.35483294428516376 pu
+t = 70 s:   load = 0.50 pu
+t = 100 s:  end of simulation
+```
+
+The first load step makes the rotor slow down. The second load step reduces the
+electrical load enough for the rotor to accelerate above 60 Hz. The third load
+step restores the initial electrical load, so the final open-loop equilibrium
+returns to 60 Hz.
+
+The accumulated rotor-reference angle does not have to return to zero when the
+frequency returns to 60 Hz. It is an integral of all previous frequency error,
+so it preserves the history of the earlier lag and lead.
+
+## Model Equations
+
+State vector:
+
+```text
+x = [omega_pu, integral_state, mechanical_power_pu, rotor_angle_rad, field_current_pu]
+```
+
+Speed equation:
+
+```text
+d omega / dt = (Pm - Pe(omega) - D(omega - 1)) / (2H)
+d theta / dt = omega_nominal omega
+```
+
+Open-loop excitation:
+
+```text
+E = K_e If omega_pu
+dIf/dt = 0
+```
+
+Terminal electrical model:
+
+```text
+I_load = E_phase / (R_load + R_s + jX_s)
+V_terminal_phase = I_load R_load
+Pe = 3 |V_terminal_phase|^2 / R_load
+```
+
+Default simplified impedance:
+
+```text
+R_s = 0.02 pu
+X_s = 0.50 pu
+```
+
+Open-loop equilibrium with `D = 0`:
+
+```text
+Pe(omega_final) = Pm
+```
+
+Open-loop equilibrium with `D > 0`:
+
+```text
+Pm - Pe(omega_final) - D(omega_final - 1) = 0
+```
+
+## Rotor-Reference Display
+
+The physical 60 Hz reference and the rotor angle are:
+
+```text
+theta_ref_physical(t) = 2 pi F_NOM t
+theta_rotor_physical(t) = integral(2 pi F_NOM omega_pu(t) dt)
+delta(t) = theta_ref(t) - theta_rotor(t)
+```
+
+The long didactic animation uses a slow-motion display frequency so that both
+vectors rotate counterclockwise visibly:
+
+```text
+theta_ref_visual(t) = 2 pi F_SLOW t
+theta_rotor_visual(t) = integral(2 pi F_SLOW omega_pu(t) dt)
+delta_visual(t) = theta_ref_visual(t) - theta_rotor_visual(t)
+```
+
+Default animation settings:
+
+```text
+SLOW_MOTION_REFERENCE_FREQUENCY_HZ = 0.40
+SLIP_ANIMATION_PRE_STEP_TIME_S = 1.0
+SLIP_ANIMATION_DURATION_S = 90.0
+SLIP_ANIMATION_FRAME_COUNT = 1440
+SLIP_ANIMATION_FPS = 24
+```
+
+Because the first load step is at `10 s`, the slip animation starts at `9 s`
+and ends at `100 s`. That covers 1 s before the first step and 90 s after it.
+
+The `06_rotor_reference_slip` animation is a synchronized multi-panel figure:
+
+```text
+left panel: slow reference vector, rotor vector, and shaded lag sector
+right panels: frequency, terminal voltage, power balance, internal voltage, accumulated lead
+```
+
+The shaded sector starts at 20 percent opacity and becomes more opaque as the
+absolute accumulated lead or lag grows:
+
+```text
+alpha = min(0.80, 0.20 + 0.10 abs(lead_cycles))
+```
+
+Grid lines use 50 percent opacity. Auxiliary items such as load-step markers,
+current-time markers, full background curves, the reference circle, and the lag
+sector are intentionally hidden from legends.
+
+## Module Responsibilities
+
+- `config.py`: editable parameters, load schedule, base quantities, and validation
+- `load.py`: balanced resistive load schedule and phase resistance calculation
+- `excitation.py`: open-loop `E = K_e If omega_pu` excitation model
+- `electrical.py`: balanced per-phase terminal phasor model
+- `generator.py`: state derivatives and three-phase waveform reconstruction
+- `simulation.py`: segmented ODE integration and dense state sampling
+- `damping.py`: open-loop equilibrium theory and damping comparison
+- `governor.py`: optional PI speed-governor model
+- `results.py`: result container and summary tables
+- `validation.py`: automatic engineering checks
+- `plotting.py`: static Matplotlib figure generation
+- `animation.py`: GIF and MP4 animation generation
+- `runner.py`: complete workflow orchestration
+- `cli.py`: command-line interface
+
+## Run
+
+Default open-loop selected case plus automatic comparison:
+
+```powershell
+python scripts/run_simulation.py
+```
+
+Fast run without animations:
+
+```powershell
+python scripts/run_simulation.py --skip-animations
+```
+
+Selected open-loop case directly with damping:
+
+```powershell
+python scripts/run_simulation.py --damping 2.0 --simulation-time 100
+```
+
+Optional PI speed-governed case:
+
+```powershell
+python scripts/run_simulation.py --control-mode pi
+```
+
+## Outputs
+
+The full run writes:
+
+```text
+results/dynamic_generator_results.csv
+results/dynamic_generator_summary.csv
+results/validation_report.csv
+results/damping_theory.csv
+results/damping_comparison.csv
+results/open_loop_equilibrium_curve.csv
+results/figures/*.png
+results/animations/*.gif
+results/animations/06_rotor_reference_slip.mp4
+```
+
+The MP4 is generated from the same Matplotlib animation object used for:
+
+```text
+results/animations/06_rotor_reference_slip.gif
+```
+
+Important dynamic output columns:
+
+```text
+time_s
+frequency_hz
+omega_pu
+frequency_error_hz
+mechanical_power_pu
+electrical_power_pu
+mechanical_power_reference_pu
+field_current_pu
+internal_voltage_ll_rms
+terminal_voltage_ll_rms
+terminal_voltage_phase_rms
+terminal_voltage_angle_rad
+load_current_phase_rms
+load_resistance_ohm
+rotor_angle_rad
+```
+
+## Validation
+
+The open-loop validation checks that:
+
+- initial frequency is approximately 60 Hz
+- initial mechanical and electrical powers are equal
+- frequency initially decreases after the load increase
+- mechanical power remains constant without a speed regulator
+- initial terminal voltage is nominal
+- field current remains constant without AVR
+- terminal voltage drops after the first load increase
+- final frequency reaches the theoretical open-loop equilibrium
+- frequency increases after the second load reduction
+- frequency decreases after the third load restoration
+- phase voltages are displaced by approximately 120 degrees
+- total instantaneous power varies smoothly for a balanced resistive load
+- power and speed-derivative signs are consistent
+
+## Handoff Notes For Codex
+
+A new Codex session should:
+
+1. Read `README.md` for the human-facing overview and commands.
+2. Read this file for the concise engineering handoff.
+3. Inspect `src/dynamic_ac_generator/config.py` before changing scenario values.
+4. Use `pytest` for regression checks.
+5. Use `python scripts/run_simulation.py` to regenerate outputs.
+
+When changing load-step timing, update:
+
+- `SimulationConfig.LOAD_STEP_TIME_S`
+- `SimulationConfig.SECOND_LOAD_STEP_TIME_S`
+- `SimulationConfig.THIRD_LOAD_STEP_TIME_S`
+- `SimulationConfig.SIMULATION_TIME_S`
+- `SimulationConfig.SLIP_ANIMATION_DURATION_S`
+- tests in `tests/test_config.py`, `tests/test_load.py`, and `tests/test_animations.py`
+- `README.md`
+- `PROJECT_CONTEXT.md`
+
+## Known Limitations
+
+This simplified model does not include:
+
+- AVR
+- saturation
+- detailed field-winding dynamics
+- full dq-axis equations
+- subtransient and transient reactances
+- damper windings
+- unbalanced-load effects
+- shaft torsional dynamics
+- protection or instability events for very low speed
+
+The model is intended for didactic active-power, frequency, excitation,
+voltage-drop, and rotor-reference slip behavior in a balanced isolated
+generator.
