@@ -23,7 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--skip-animations",
         action="store_true",
-        help="Skip GIF animation generation for a faster run.",
+        help="Skip MP4 animation generation for a faster run.",
     )
     parser.add_argument(
         "--control-mode",

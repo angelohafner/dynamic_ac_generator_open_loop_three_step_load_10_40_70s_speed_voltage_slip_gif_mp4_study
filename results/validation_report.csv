@@ -6,9 +6,9 @@ PASS,Mechanical power remains constant without a speed regulator,0.0,pu change
 PASS,Initial terminal voltage is nominal in open-loop excitation,0.0,V LL RMS error
 PASS,Field current remains constant in open-loop excitation,0.0,pu change
 PASS,Terminal voltage drops after the first impedance change,65.31738518443979,V LL RMS drop
-PASS,Final frequency reaches the theoretical open-loop equilibrium,6.145218591768753e-06,Hz error
+PASS,Final frequency reaches the theoretical open-loop equilibrium,0.27468392643396555,Hz error
 PASS,Frequency decreases after the second impedance change,-2.263271012935334,Hz change
-PASS,Frequency increases after the third load restoration,0.6722428901698976,Hz change
+PASS,Frequency increases after the third load restoration,2.5611064308728757,Hz change
 PASS,Three phase voltages are displaced by approximately 120 degrees,0.7803632444060327,degree error
 PASS,Total instantaneous power varies smoothly for a balanced impedance load,0.004554889528844829,relative standard deviation
 PASS,Energy and power signs are consistent immediately after the disturbance,0.06686020863286833,pu/s speed derivative

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from dynamic_ac_generator.animation import generate_all_animations, generate_damping_comparison_animation
+from dynamic_ac_generator.animation import generate_all_animations
 from dynamic_ac_generator.config import SimulationConfig
 from dynamic_ac_generator.damping import (
     build_damping_comparison,
@@ -120,10 +120,6 @@ def run_complete_simulation(
         )
 
     animation_paths = generate_all_animations(simulation, results, animations_path) if save_animations else []
-    if save_animations and damping_comparison is not None:
-        animation_paths = animation_paths + [
-            generate_damping_comparison_animation(damping_comparison, animations_path)
-        ]
 
     dynamic_results_path = output_path / "dynamic_generator_results.csv"
     summary_results_path = output_path / "dynamic_generator_summary.csv"

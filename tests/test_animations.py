@@ -179,10 +179,10 @@ def test_slow_motion_slip_animation_uses_dense_smooth_playback() -> None:
     maximum_reference_step_degrees = np.rad2deg(np.max(np.abs(np.diff(reference_angle_rad))))
 
     assert np.isclose(config.SLOW_MOTION_REFERENCE_FREQUENCY_HZ, 0.40)
-    assert config.SLIP_ANIMATION_FRAME_COUNT >= 1440
+    assert config.SLIP_ANIMATION_FRAME_COUNT >= 1680
     assert config.SLIP_ANIMATION_FPS == 24
     assert maximum_reference_step_degrees <= 10.1
-    assert np.isclose(config.SIMULATION_TIME_S, 100.0)
+    assert np.isclose(config.SIMULATION_TIME_S, 110.0)
 
 
 def test_rotor_reference_slip_does_not_keep_gif_pair_helper() -> None:
@@ -284,8 +284,11 @@ def test_rotor_reference_slip_uses_arrow_phasors_without_dot_markers() -> None:
 def test_rotor_reference_slip_uses_clean_terminal_phasor_radial_ticks() -> None:
     source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
 
-    assert "phasor_axis.set_rticks([0.5, 1.0, 1.5])" in source
-    assert "np.linspace(0.0, phasor_limit, 4)[1:]" not in source
+    assert "_enable_polar_angle_grid(rotor_axis)" in source
+    assert "_enable_polar_angle_grid(phasor_axis)" in source
+    assert "phasor_axis.set_rticks([0.5, 1.0, 1.5])" not in source
+    assert "rotor_axis.set_rticks([0.4, 0.8, 1.2])" not in source
+    assert "np.arange(0.0, 360.0, 30.0)" in inspect.getsource(animation._enable_polar_angle_grid)
 
 
 def test_rotor_reference_slip_lead_text_has_opaque_white_background() -> None:
@@ -311,13 +314,27 @@ def test_rotor_reference_slip_renders_mp4_without_gif_export() -> None:
     assert "save_mp4=True" not in source
 
 
+def test_default_animation_workflow_renders_only_slip_mp4() -> None:
+    source = inspect.getsource(animation.generate_all_animations)
+
+    assert "generate_rotor_reference_slip_animation" in source
+    assert "generate_frequency_power_animation" not in source
+    assert "generate_rotor_waveform_animation" not in source
+    assert "generate_governor_state_animation" not in source
+    assert "generate_open_loop_voltage_animation" not in source
+
+
 def test_rotor_reference_slip_includes_load_impedance_panel_with_stacked_axes() -> None:
     source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
 
     assert "frame_load_impedance_magnitude_ohm" in source
+    assert "frame_load_impedance_real_ohm" in source
+    assert "frame_load_impedance_imag_ohm" in source
     assert "frame_load_impedance_angle_deg" in source
     assert "Load Impedance" in source
-    assert '"|Z| (ohm)"' in source
+    assert '"Impedance (ohm)"' in source
+    assert '"Re(Z)"' in source
+    assert '"Im(Z)"' in source
     assert '"Angle (deg)"' in source
     assert "impedance_angle_axis = impedance_axis.twinx()" not in source
     assert "impedance_magnitude_axis" in source

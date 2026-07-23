@@ -36,26 +36,26 @@ Default load-impedance schedule:
 t = 0 s:    Z_load = 0.50 pu angle -45 deg
 t = 10 s:   Z_load = 0.60 pu angle -30 deg
 t = 40 s:   Z_load = 0.60 pu angle -60 deg
-t = 70 s:   Z_load = 0.50 pu angle -45 deg
-t = 100 s:  end of simulation
+t = 70 s:   Z_load = 0.60 pu angle +60 deg
+t = 110 s:  end of simulation
 ```
 
 The first impedance step reduces active electrical power and makes the rotor
 accelerate. The second impedance step makes active electrical power larger than
 the constant mechanical input at the reached speed, so the rotor decelerates.
-The third load step restores the initial impedance; at the lower speed reached
-by then, mechanical input is larger than electrical power, so the rotor
-accelerates and the final open-loop equilibrium returns to 60 Hz.
+The third load step changes the load to `0.60 pu angle +60 deg`; at the reached
+speed, active electrical power is lower than the constant mechanical input, so
+the rotor accelerates toward a high open-loop equilibrium.
 
 With `Z_base = V_LL^2 / S_base = 1.6 ohm`, the four per-phase impedance
-magnitudes are `0.80 ohm`, `0.96 ohm`, `0.96 ohm`, and `0.80 ohm`.
+magnitudes are `0.80 ohm`, `0.96 ohm`, `0.96 ohm`, and `0.96 ohm`.
 The rectangular values are approximately `0.5657 - j0.5657 ohm`,
 `0.8314 - j0.4800 ohm`, `0.4800 - j0.8314 ohm`, and
-`0.5657 - j0.5657 ohm`.
+`0.4800 + j0.8314 ohm`.
 
 The accumulated rotor-reference angle does not have to return to zero when the
-frequency returns to 60 Hz. It is an integral of all previous frequency error,
-so it preserves the history of the earlier lag and lead.
+frequency reaches the final equilibrium. It is an integral of all previous
+frequency error, so it preserves the history of the earlier lag and lead.
 
 ## Model Equations
 
@@ -140,11 +140,11 @@ Default animation settings:
 
 ```text
 SLOW_MOTION_REFERENCE_FREQUENCY_HZ = 0.40
-SLIP_ANIMATION_FRAME_COUNT = 1440
+SLIP_ANIMATION_FRAME_COUNT = 1680
 SLIP_ANIMATION_FPS = 24
 ```
 
-The slip animation frames now start at `0 s` and end at `100 s`. This shows the
+The slip animation frames now start at `0 s` and end at `110 s`. This shows the
 initial steady-state interval from `0 s` to `10 s`, then continues through the
 load changes at `10 s`, `40 s`, and `70 s`. The chart x-axis uses absolute
 simulation time, so the rendered load-change markers appear at those exact
@@ -153,12 +153,13 @@ times.
 Important timing distinction:
 
 ```text
-animated frame time window     = 0 s to 100 s
-fixed time-chart x-axis        = 0 s to 100 s
+animated frame time window     = 0 s to 110 s
+fixed time-chart x-axis        = 0 s to 110 s
 load steps shown on chart      = 10 s, 40 s, 70 s
-MP4 playback duration          = 60.125 s
+MP4 playback duration          = 70.125 s
 MP4 frame rate                 = 24 fps
-MP4 frame count                = 1443 frames
+MP4 frame count                = 1683 frames
+maximum visual angular step    = about 9.43 deg/frame
 ```
 
 The MP4 duration is only the viewing duration of the rendered animation. It is
@@ -170,7 +171,7 @@ The `06_rotor_reference_slip` animation is a synchronized multi-panel figure:
 left upper panel: polar slow reference vector, rotor vector, and shaded lag sector
 left lower panel: polar terminal phasor diagram with arrowhead fasors
 right panels: six time charts arranged as 3 rows by 2 columns
-right chart contents: frequency, terminal voltage, power balance, internal voltage, load impedance magnitude/angle, accumulated lead
+right chart contents: frequency, terminal voltage, power balance, internal voltage, load impedance magnitude/real/imaginary/angle, accumulated lead
 ```
 
 This animation is intentionally rendered only as:
@@ -188,17 +189,18 @@ absolute accumulated lead or lag grows:
 alpha = min(0.80, 0.20 + 0.10 abs(lead_cycles))
 ```
 
-Grid lines use 50 percent opacity. Auxiliary items such as load-step markers,
-current-time markers, full background curves, the reference circle, and the lag
-sector are intentionally hidden from legends. The left-column rotating-vector
-and terminal-phasor panels use Matplotlib polar projection; fasors use arrows
-instead of endpoint markers. The terminal phasor radial grid is fixed at `0.5`,
-`1.0`, and `1.5` pu. The terminal phasor diagram uses terminal voltage as the
-angular reference, so `V_terminal` is drawn at `0 deg`; `I_load` is drawn at
-`-phi_load`, and `E_internal` is drawn relative to that terminal-voltage
-reference. The load-impedance panel is split into two stacked subplots sharing
-absolute simulation time: `|Z|` in ohms on top and impedance angle in degrees
-below. The rotor lag text uses an opaque white background.
+Cartesian grid lines use 50 percent opacity. The polar panels show only angular
+grid lines, spaced every 30 degrees, with circular radial grid lines removed.
+Auxiliary items such as load-step markers, current-time markers, full
+background curves, the reference circle, and the lag sector are intentionally
+hidden from legends. The left-column rotating-vector and terminal-phasor panels
+use Matplotlib polar projection; fasors use arrows instead of endpoint markers.
+The terminal phasor diagram uses terminal voltage as the angular reference, so
+`V_terminal` is drawn at `0 deg`; `I_load` is drawn at `-phi_load`, and
+`E_internal` is drawn relative to that terminal-voltage reference. The
+load-impedance panel is split into two stacked subplots sharing absolute
+simulation time: `|Z|`, `Re(Z)`, and `Im(Z)` in ohms on top, and impedance angle
+in degrees below. The rotor lag text uses an opaque white background.
 
 ## Module Responsibilities
 
@@ -213,7 +215,7 @@ below. The rotor lag text uses an opaque white background.
 - `results.py`: result container and summary tables
 - `validation.py`: automatic engineering checks
 - `plotting.py`: static Matplotlib figure generation
-- `animation.py`: GIF and MP4 animation generation
+- `animation.py`: MP4 animation workflow and legacy helper animation functions
 - `runner.py`: complete workflow orchestration
 - `cli.py`: command-line interface
 
@@ -261,12 +263,12 @@ results/damping_theory.csv
 results/damping_comparison.csv
 results/open_loop_equilibrium_curve.csv
 results/figures/*.png
-results/animations/*.gif
 results/animations/06_rotor_reference_slip.mp4
 ```
 
-The other default animations remain GIF files. The `06_rotor_reference_slip`
-animation is MP4-only.
+The default animation workflow renders only `06_rotor_reference_slip.mp4`.
+Older GIF artifacts were removed because they are no longer part of the current
+synchronized multi-panel view.
 
 Important dynamic output columns:
 
@@ -327,16 +329,17 @@ A new Codex session should:
    show `10 s`, `40 s`, and `70 s` for the load changes. Do not convert this
    figure to time relative to the first load step.
 8. Distinguish MP4 playback duration from physical simulation time: the current
-   video plays for about `60.125 s`, while the time-chart x-axis is fixed from
-   `0 s` to `100 s`.
+   video plays for about `70.125 s`, while the time-chart x-axis is fixed from
+   `0 s` to `110 s`.
 9. Keep the load-impedance chart in the right-side time-series stack, split
-   into two stacked subplots sharing the same time axis: `|Z|` on top and
-   impedance angle below.
+   into two stacked subplots sharing the same time axis: `|Z|`, `Re(Z)`, and
+   `Im(Z)` on top, and impedance angle below.
 10. Keep the six right-side time charts arranged as 3 rows by 2 columns.
 11. Keep the terminal phasor diagram directly below the rotating vectors.
 12. Keep both left-column vector panels on Matplotlib polar axes, with
     arrowhead fasors instead of endpoint dots.
-13. Keep the terminal phasor radial grid fixed at `0.5`, `1.0`, and `1.5`.
+13. Keep both polar panels with angular grid lines only, spaced every 30
+    degrees; do not reintroduce circular radial grid lines.
 14. Keep the rotor lag `Lead` and `Full turns` text on an opaque white
     background.
 15. Do not reintroduce `results/animations/06_rotor_reference_slip.gif`; this

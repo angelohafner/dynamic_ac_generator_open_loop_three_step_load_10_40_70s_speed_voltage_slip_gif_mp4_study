@@ -129,6 +129,16 @@ def generate_all_figures(
         results.load_impedance_magnitude_ohm,
         label="|Z|",
     )
+    real_line, = impedance_magnitude_axis.plot(
+        results.time_s,
+        results.load_impedance_real_ohm,
+        label="Re(Z)",
+    )
+    imaginary_line, = impedance_magnitude_axis.plot(
+        results.time_s,
+        results.load_impedance_imag_ohm,
+        label="Im(Z)",
+    )
     angle_line, = impedance_angle_axis.plot(
         results.time_s,
         results.load_impedance_angle_deg,
@@ -141,11 +151,14 @@ def generate_all_figures(
     impedance_magnitude_axis.set_title("Load Impedance Magnitude Versus Time")
     impedance_angle_axis.set_title("Load Impedance Angle Versus Time")
     impedance_angle_axis.set_xlabel("Time (s)")
-    impedance_magnitude_axis.set_ylabel("|Z| (ohm)")
+    impedance_magnitude_axis.set_ylabel("Impedance (ohm)")
     impedance_angle_axis.set_ylabel("Angle (deg)")
     for axis in (impedance_magnitude_axis, impedance_angle_axis):
         axis.grid(True, alpha=0.5)
-    impedance_magnitude_axis.legend(handles=[magnitude_line], loc="upper right")
+    impedance_magnitude_axis.legend(
+        handles=[magnitude_line, real_line, imaginary_line],
+        loc="upper right",
+    )
     impedance_angle_axis.legend(handles=[angle_line], loc="upper right")
     figure_paths.append(_save_current_figure(output_dir, "04_load_impedance.png"))
 

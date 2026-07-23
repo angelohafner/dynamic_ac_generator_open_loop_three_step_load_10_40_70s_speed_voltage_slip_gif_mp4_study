@@ -17,8 +17,8 @@ def test_impedance_load_returns_expected_magnitude_and_angle_before_and_after_st
     assert math.isclose(load.impedance_angle_deg_at(10.0), -30.0, rel_tol=1e-12)
     assert math.isclose(load.impedance_magnitude_pu_at(40.0), 0.6, rel_tol=1e-12)
     assert math.isclose(load.impedance_angle_deg_at(40.0), -60.0, rel_tol=1e-12)
-    assert math.isclose(load.impedance_magnitude_pu_at(70.0), config.INITIAL_LOAD_PU, rel_tol=1e-12)
-    assert math.isclose(load.impedance_angle_deg_at(70.0), config.INITIAL_LOAD_ANGLE_DEG, rel_tol=1e-12)
+    assert math.isclose(load.impedance_magnitude_pu_at(70.0), 0.6, rel_tol=1e-12)
+    assert math.isclose(load.impedance_angle_deg_at(70.0), 60.0, rel_tol=1e-12)
 
 
 def test_impedance_load_supports_array_inputs() -> None:
@@ -42,8 +42,8 @@ def test_impedance_load_supports_array_inputs() -> None:
                 0.6,
                 0.6,
                 0.6,
-                config.INITIAL_LOAD_PU,
-                config.INITIAL_LOAD_PU,
+                0.6,
+                0.6,
             ],
             dtype=float,
         ),
@@ -58,8 +58,8 @@ def test_impedance_load_supports_array_inputs() -> None:
                 -30.0,
                 -60.0,
                 -60.0,
-                -45.0,
-                -45.0,
+                60.0,
+                60.0,
             ],
             dtype=float,
         ),

@@ -22,7 +22,7 @@ class SimulationConfig:
     H: float = 3.0
     D: float = 0.0
     DAMPED_COMPARISON_D: float = 2.0
-    DAMPING_COMPARISON_SIMULATION_TIME_S: float = 100.0
+    DAMPING_COMPARISON_SIMULATION_TIME_S: float = 110.0
     DAMPING_SETTLING_TOLERANCE_HZ: float = 0.50
 
     KP: float = 5.0
@@ -40,12 +40,12 @@ class SimulationConfig:
     SECOND_STEP_LOAD_PU: float | None = 0.60
     SECOND_STEP_LOAD_ANGLE_DEG: float | None = -60.0
     THIRD_LOAD_STEP_TIME_S: float | None = 70.0
-    THIRD_STEP_LOAD_PU: float | None = 0.50
-    THIRD_STEP_LOAD_ANGLE_DEG: float | None = -45.0
+    THIRD_STEP_LOAD_PU: float | None = 0.60
+    THIRD_STEP_LOAD_ANGLE_DEG: float | None = 60.0
     ADDITIONAL_LOAD_STEPS: tuple[tuple[float, float, float], ...] | None = None
 
     LOAD_STEP_TIME_S: float = 10.0
-    SIMULATION_TIME_S: float = 100.0
+    SIMULATION_TIME_S: float = 110.0
     FREQUENCY_TOLERANCE_HZ: float = 0.01
 
     DYNAMIC_SAMPLE_STEP_S: float = 0.001
@@ -65,7 +65,7 @@ class SimulationConfig:
     SLOW_MOTION_REFERENCE_FREQUENCY_HZ: float = 0.40
     SLIP_ANIMATION_PRE_STEP_TIME_S: float = 1.0
     SLIP_ANIMATION_DURATION_S: float = 90.0
-    SLIP_ANIMATION_FRAME_COUNT: int = 1440
+    SLIP_ANIMATION_FRAME_COUNT: int = 1680
     SLIP_ANIMATION_FPS: int = 24
 
     RELATIVE_TOLERANCE: float = 1e-9

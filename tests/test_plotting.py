@@ -13,5 +13,9 @@ def test_static_load_impedance_figure_uses_stacked_shared_time_axes() -> None:
     assert "impedance_magnitude_axis" in source
     assert "impedance_angle_axis" in source
     assert ".twinx()" not in source
+    assert "results.load_impedance_real_ohm" in source
+    assert "results.load_impedance_imag_ohm" in source
+    assert '"Re(Z)"' in source
+    assert '"Im(Z)"' in source
     assert '"Load Impedance Magnitude Versus Time"' in source
     assert '"Load Impedance Angle Versus Time"' in source

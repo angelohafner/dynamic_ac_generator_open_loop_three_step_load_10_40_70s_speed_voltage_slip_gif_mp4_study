@@ -55,8 +55,13 @@ def test_open_loop_load_step_changes_voltage_with_constant_field_current() -> No
         results.omega_pu[step_index + 1],
         rel_tol=1e-9,
     )
-    assert math.isclose(results.internal_voltage_ll_rms[-1], results.internal_voltage_ll_rms[0], abs_tol=1.0)
-    assert math.isclose(results.frequency_hz[-1], config.F_NOM_HZ, abs_tol=config.DAMPING_SETTLING_TOLERANCE_HZ)
+    assert results.internal_voltage_ll_rms[-1] > results.internal_voltage_ll_rms[0]
+    assert math.isclose(
+        results.internal_voltage_ll_rms[-1] / results.internal_voltage_ll_rms[0],
+        results.omega_pu[-1],
+        rel_tol=1e-9,
+    )
+    assert results.frequency_hz[-1] > config.F_NOM_HZ + 100.0
     assert results.electrical_power_pu[step_index + 1] < results.electrical_power_pu[0]
     assert results.reactive_power_pu[step_index + 1] < 0.0
 

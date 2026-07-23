@@ -336,6 +336,14 @@ def _enable_grid(axis) -> None:
     axis.grid(True, alpha=0.5)
 
 
+def _enable_polar_angle_grid(axis) -> None:
+    """Show only polar angular grid lines at 30-degree spacing."""
+    axis.set_thetagrids(np.arange(0.0, 360.0, 30.0))
+    axis.set_rticks([])
+    axis.xaxis.grid(True, alpha=0.5)
+    axis.yaxis.grid(False)
+
+
 def _add_load_step_markers(axis, config: SimulationConfig, reference_time_s: float = 0.0) -> None:
     """Add fixed vertical markers for every configured load step."""
     for step_index, step_time_s in enumerate(config.load_step_times_s, start=1):
@@ -1037,6 +1045,16 @@ def generate_rotor_reference_slip_animation(
         results.time_s,
         active_frame_times_s,
     )
+    frame_load_impedance_real_ohm = _interpolate(
+        results.load_impedance_real_ohm,
+        results.time_s,
+        active_frame_times_s,
+    )
+    frame_load_impedance_imag_ohm = _interpolate(
+        results.load_impedance_imag_ohm,
+        results.time_s,
+        active_frame_times_s,
+    )
     frame_load_impedance_angle_deg = _interpolate(
         results.load_impedance_angle_deg,
         results.time_s,
@@ -1146,10 +1164,9 @@ def generate_rotor_reference_slip_animation(
     rotor_axis.set_theta_zero_location("E")
     rotor_axis.set_theta_direction(1)
     rotor_axis.set_ylim(0.0, 1.2)
-    rotor_axis.set_rticks([0.4, 0.8, 1.2])
     rotor_axis.set_rlabel_position(315.0)
     rotor_axis.set_title("Slow-Motion Rotor Lag")
-    _enable_grid(rotor_axis)
+    _enable_polar_angle_grid(rotor_axis)
     _fixed_legend(rotor_axis, "lower left")
 
     phasor_limit = 1.20 * float(
@@ -1225,10 +1242,9 @@ def generate_rotor_reference_slip_animation(
     phasor_axis.set_theta_zero_location("E")
     phasor_axis.set_theta_direction(1)
     phasor_axis.set_ylim(0.0, max(phasor_limit, 1.5))
-    phasor_axis.set_rticks([0.5, 1.0, 1.5])
     phasor_axis.set_rlabel_position(135.0)
     phasor_axis.set_title("Terminal Phasors")
-    _enable_grid(phasor_axis)
+    _enable_polar_angle_grid(phasor_axis)
     _fixed_legend(phasor_axis, "lower left")
 
     frequency_axis.plot(
@@ -1294,6 +1310,18 @@ def generate_rotor_reference_slip_animation(
         alpha=0.25,
         label="_Full load impedance magnitude",
     )
+    impedance_magnitude_axis.plot(
+        animation_time_s,
+        frame_load_impedance_real_ohm,
+        alpha=0.25,
+        label="_Full load impedance real",
+    )
+    impedance_magnitude_axis.plot(
+        animation_time_s,
+        frame_load_impedance_imag_ohm,
+        alpha=0.25,
+        label="_Full load impedance imaginary",
+    )
     impedance_angle_axis.plot(
         animation_time_s,
         frame_load_impedance_angle_deg,
@@ -1302,6 +1330,8 @@ def generate_rotor_reference_slip_animation(
         label="_Full load impedance angle",
     )
     impedance_magnitude_line, = impedance_magnitude_axis.plot([], [], label="|Z|")
+    impedance_real_line, = impedance_magnitude_axis.plot([], [], label="Re(Z)")
+    impedance_imaginary_line, = impedance_magnitude_axis.plot([], [], label="Im(Z)")
     impedance_angle_line, = impedance_angle_axis.plot(
         [],
         [],
@@ -1309,7 +1339,7 @@ def generate_rotor_reference_slip_animation(
         label="Angle",
     )
     impedance_magnitude_axis.set_title("Load Impedance")
-    impedance_magnitude_axis.set_ylabel("|Z| (ohm)")
+    impedance_magnitude_axis.set_ylabel("Impedance (ohm)")
     impedance_angle_axis.set_ylabel("Angle (deg)")
     _enable_grid(impedance_magnitude_axis)
     _enable_grid(impedance_angle_axis)
@@ -1365,7 +1395,17 @@ def generate_rotor_reference_slip_animation(
         )
     )
     internal_voltage_axis.set_ylim(*_axis_limits(frame_internal_voltage_v))
-    impedance_magnitude_axis.set_ylim(*_axis_limits(frame_load_impedance_magnitude_ohm))
+    impedance_magnitude_axis.set_ylim(
+        *_axis_limits(
+            np.concatenate(
+                [
+                    frame_load_impedance_magnitude_ohm,
+                    frame_load_impedance_real_ohm,
+                    frame_load_impedance_imag_ohm,
+                ]
+            )
+        )
+    )
     impedance_angle_axis.set_ylim(*_axis_limits(frame_load_impedance_angle_deg))
     lead_axis.set_ylim(*_axis_limits(lead_cycles))
 
@@ -1439,6 +1479,14 @@ def generate_rotor_reference_slip_animation(
             animation_time_s[current_slice],
             frame_load_impedance_magnitude_ohm[current_slice],
         )
+        impedance_real_line.set_data(
+            animation_time_s[current_slice],
+            frame_load_impedance_real_ohm[current_slice],
+        )
+        impedance_imaginary_line.set_data(
+            animation_time_s[current_slice],
+            frame_load_impedance_imag_ohm[current_slice],
+        )
         impedance_angle_line.set_data(
             animation_time_s[current_slice],
             frame_load_impedance_angle_deg[current_slice],
@@ -1467,6 +1515,8 @@ def generate_rotor_reference_slip_animation(
             electrical_power_line,
             internal_voltage_line,
             impedance_magnitude_line,
+            impedance_real_line,
+            impedance_imaginary_line,
             impedance_angle_line,
             lead_line,
             *current_markers,
@@ -1493,15 +1543,9 @@ def generate_all_animations(
     results: SimulationResults,
     output_dir: Path,
 ) -> list[Path]:
-    """Generate all GIF animations for the selected generator case."""
-    frame_times_s = build_animation_frame_times(results.config)
-    rotor_frame_times_s = build_rotor_animation_frame_times(results.config)
+    """Generate the current default MP4 animation for the selected generator case."""
     slip_frame_times_s = build_slip_animation_frame_times(results.config)
     animation_paths = [
-        generate_frequency_power_animation(results, output_dir, frame_times_s),
-        generate_rotor_waveform_animation(simulation, results, output_dir, rotor_frame_times_s),
-        generate_governor_state_animation(results, output_dir, frame_times_s),
-        generate_open_loop_voltage_animation(results, output_dir, frame_times_s),
         generate_rotor_reference_slip_animation(results, output_dir, slip_frame_times_s),
     ]
     return animation_paths
