@@ -151,15 +151,12 @@ physical simulation seconds.
 
 The synchronized `06_rotor_reference_slip` animation contains:
 
-- a slow reference vector and a rotor vector
-- a terminal phasor diagram below the rotating vectors
+- a polar slow-motion reference vector and rotor vector
+- a polar terminal phasor diagram below the rotating vectors
 - a shaded rotor-reference lag sector
-- frequency
-- terminal voltage
-- mechanical and electrical power
-- internal voltage
-- load resistance in ohms
-- accumulated reference lead
+- six time-domain charts arranged as 3 rows by 2 columns:
+  frequency, terminal voltage, mechanical/electrical power, internal voltage,
+  load resistance in ohms, and accumulated reference lead
 
 The shaded sector starts at 20 percent opacity and becomes more opaque as the
 absolute accumulated lead or lag grows:
@@ -170,13 +167,9 @@ alpha = min(0.80, 0.20 + 0.10 abs(lead_cycles))
 
 Grid lines use 50 percent opacity. Auxiliary items such as load-step markers,
 current-time markers, full background curves, the reference circle, and the lag
-sector are intentionally hidden from legends. Rotor-axis labels are rendered
-with LaTeX:
-
-```text
-$\cos(\theta)$
-$\sin(\theta)$
-```
+sector are intentionally hidden from legends. The rotating-vector panel and the
+terminal phasor panel both use Matplotlib polar axes. The terminal phasors are
+drawn as arrows, not endpoint dots, so the arrowhead marks the fasor direction.
 
 ## Project Structure
 
@@ -406,9 +399,11 @@ This repository is intended to be self-contained. A new Codex session should:
    this figure; otherwise the load markers visually become `0 s`, `30 s`, and
    `60 s` even though the simulation is configured for `10 s`, `40 s`, and
    `70 s`.
-10. Keep the load-resistance panel on the absolute simulation-time axis and
-    keep the terminal phasor diagram below the rotating vectors in the left
+10. Keep the load-resistance panel on the absolute simulation-time axis.
+11. Keep the terminal phasor diagram below the rotating vectors in the left
     column.
+12. Keep both left-column vector panels on Matplotlib polar axes, and keep the
+    six right-side time charts arranged as 3 rows by 2 columns.
 
 When changing load-step timing, update:
 

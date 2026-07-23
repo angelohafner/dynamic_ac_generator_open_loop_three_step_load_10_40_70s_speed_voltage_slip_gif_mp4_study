@@ -148,9 +148,10 @@ not the simulated physical time.
 The `06_rotor_reference_slip` animation is a synchronized multi-panel figure:
 
 ```text
-left upper panel: slow reference vector, rotor vector, and shaded lag sector
-left lower panel: terminal phasor diagram
-right panels: frequency, terminal voltage, power balance, internal voltage, load resistance, accumulated lead
+left upper panel: polar slow reference vector, rotor vector, and shaded lag sector
+left lower panel: polar terminal phasor diagram with arrowhead fasors
+right panels: six time charts arranged as 3 rows by 2 columns
+right chart contents: frequency, terminal voltage, power balance, internal voltage, load resistance, accumulated lead
 ```
 
 This animation is intentionally rendered only as:
@@ -170,7 +171,9 @@ alpha = min(0.80, 0.20 + 0.10 abs(lead_cycles))
 
 Grid lines use 50 percent opacity. Auxiliary items such as load-step markers,
 current-time markers, full background curves, the reference circle, and the lag
-sector are intentionally hidden from legends.
+sector are intentionally hidden from legends. The left-column rotating-vector
+and terminal-phasor panels use Matplotlib polar projection; fasors use arrows
+instead of endpoint markers.
 
 ## Module Responsibilities
 
@@ -296,8 +299,11 @@ A new Codex session should:
    video plays for about `60.125 s`, while the simulation shown by the axis goes
    from `9 s` to `100 s`.
 9. Keep the load-resistance chart in the right-side time-series stack.
-10. Keep the terminal phasor diagram directly below the rotating vectors.
-11. Do not reintroduce `results/animations/06_rotor_reference_slip.gif`; this
+10. Keep the six right-side time charts arranged as 3 rows by 2 columns.
+11. Keep the terminal phasor diagram directly below the rotating vectors.
+12. Keep both left-column vector panels on Matplotlib polar axes, with
+    arrowhead fasors instead of endpoint dots.
+13. Do not reintroduce `results/animations/06_rotor_reference_slip.gif`; this
     animation is intentionally MP4-only.
 
 When changing load-step timing, update:

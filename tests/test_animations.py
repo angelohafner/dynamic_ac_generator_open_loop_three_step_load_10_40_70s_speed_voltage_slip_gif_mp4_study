@@ -242,8 +242,6 @@ def test_rotor_reference_slip_auxiliary_labels_are_hidden() -> None:
 def test_rotor_reference_slip_uses_latex_axis_labels_and_dashed_references() -> None:
     source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
 
-    assert 'set_xlabel(r"$\\cos(\\theta)$")' in source
-    assert 'set_ylabel(r"$\\sin(\\theta)$")' in source
     assert 'label="_Lag sector"' in source
     assert 'label="Nominal frequency"' in source
     assert 'label="Nominal voltage"' in source
@@ -252,6 +250,35 @@ def test_rotor_reference_slip_uses_latex_axis_labels_and_dashed_references() -> 
     assert 'linestyle="--", label="Nominal voltage"' in source
     assert 'linestyle="--", label="Zero lag"' in source
     assert '"06_rotor_reference_slip.mp4"' in source
+
+
+def test_rotor_reference_slip_uses_polar_axes_for_rotor_and_phasors() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert 'projection="polar"' in source
+    assert 'rotor_axis = figure.add_subplot(grid[0:2, 0], projection="polar")' in source
+    assert 'phasor_axis = figure.add_subplot(grid[2:, 0], projection="polar")' in source
+
+
+def test_rotor_reference_slip_time_charts_are_three_by_two() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert "time_grid = grid[:, 1:].subgridspec(3, 2" in source
+    assert "frequency_axis = figure.add_subplot(time_grid[0, 0])" in source
+    assert "voltage_axis = figure.add_subplot(time_grid[0, 1]" in source
+    assert "power_axis = figure.add_subplot(time_grid[1, 0]" in source
+    assert "internal_voltage_axis = figure.add_subplot(time_grid[1, 1]" in source
+    assert "resistance_axis = figure.add_subplot(time_grid[2, 0]" in source
+    assert "lead_axis = figure.add_subplot(time_grid[2, 1]" in source
+    assert "grid[2, 1:]" not in source
+    assert "grid[3, 1:]" not in source
+
+
+def test_rotor_reference_slip_uses_arrow_phasors_without_dot_markers() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert "arrowprops" in source
+    assert 'marker="o"' not in source
 
 
 def test_rotor_reference_slip_renders_mp4_without_gif_export() -> None:
@@ -318,6 +345,23 @@ def test_lag_sector_points_span_from_rotor_to_reference() -> None:
     assert np.allclose([x_values[-1], y_values[-1]], [0.0, 0.0])
     assert len(x_values) == 14
     assert len(y_values) == 14
+
+
+def test_lag_sector_polar_points_span_from_rotor_to_reference() -> None:
+    assert hasattr(animation, "calculate_lag_sector_polar_points")
+
+    theta_values, radius_values = animation.calculate_lag_sector_polar_points(
+        reference_angle_rad=np.pi / 2.0,
+        rotor_angle_rad=0.0,
+        radius=0.75,
+        sample_count=5,
+    )
+
+    assert np.isclose(radius_values[0], 0.0)
+    assert np.isclose(theta_values[1], 0.0)
+    assert np.allclose(radius_values[1:-1], 0.75)
+    assert np.isclose(theta_values[-2], np.pi / 2.0)
+    assert np.isclose(radius_values[-1], 0.0)
 
 
 def test_animation_module_does_not_use_moving_best_legends() -> None:

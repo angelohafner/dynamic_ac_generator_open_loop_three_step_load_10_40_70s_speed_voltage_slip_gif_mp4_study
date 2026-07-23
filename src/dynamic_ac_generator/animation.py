@@ -224,6 +224,35 @@ def calculate_lag_sector_points(
     return x_values.astype(float), y_values.astype(float)
 
 
+def calculate_lag_sector_polar_points(
+    reference_angle_rad: float,
+    rotor_angle_rad: float,
+    radius: float = 0.72,
+    sample_count: int = 48,
+) -> tuple[FloatArray, FloatArray]:
+    """Return theta and radius polygon points for the shaded rotor lag sector."""
+    if sample_count < 2:
+        raise ValueError("Lag sector sample count must be at least 2.")
+    lead_rad = (reference_angle_rad - rotor_angle_rad + math.pi) % (2.0 * math.pi) - math.pi
+    arc_angles_rad = np.linspace(rotor_angle_rad, rotor_angle_rad + lead_rad, sample_count, dtype=float)
+    arc_radius_values = np.full_like(arc_angles_rad, radius, dtype=float)
+    theta_values = np.concatenate(
+        [
+            np.array([rotor_angle_rad], dtype=float),
+            arc_angles_rad,
+            np.array([rotor_angle_rad], dtype=float),
+        ]
+    )
+    radius_values = np.concatenate(
+        [
+            np.array([0.0], dtype=float),
+            arc_radius_values,
+            np.array([0.0], dtype=float),
+        ]
+    )
+    return theta_values.astype(float), radius_values.astype(float)
+
+
 def calculate_lag_sector_alpha(
     lead_cycles: float,
     base_alpha: float = 0.20,
@@ -1005,29 +1034,28 @@ def generate_rotor_reference_slip_animation(
         active_frame_times_s,
     )
 
-    figure = plt.figure(figsize=(13.2, 10.2))
+    figure = plt.figure(figsize=(13.6, 10.2))
     grid = figure.add_gridspec(
         4,
         3,
-        width_ratios=[1.15, 1.35, 1.35],
+        width_ratios=[1.12, 1.35, 1.35],
         height_ratios=[1.0, 1.0, 0.90, 0.95],
     )
-    rotor_axis = figure.add_subplot(grid[0:2, 0])
-    phasor_axis = figure.add_subplot(grid[2:, 0])
-    frequency_axis = figure.add_subplot(grid[0, 1])
-    voltage_axis = figure.add_subplot(grid[0, 2], sharex=frequency_axis)
-    power_axis = figure.add_subplot(grid[1, 1], sharex=frequency_axis)
-    internal_voltage_axis = figure.add_subplot(grid[1, 2], sharex=frequency_axis)
-    resistance_axis = figure.add_subplot(grid[2, 1:], sharex=frequency_axis)
-    lead_axis = figure.add_subplot(grid[3, 1:], sharex=frequency_axis)
+    time_grid = grid[:, 1:].subgridspec(3, 2, hspace=0.46, wspace=0.26)
+    rotor_axis = figure.add_subplot(grid[0:2, 0], projection="polar")
+    phasor_axis = figure.add_subplot(grid[2:, 0], projection="polar")
+    frequency_axis = figure.add_subplot(time_grid[0, 0])
+    voltage_axis = figure.add_subplot(time_grid[0, 1], sharex=frequency_axis)
+    power_axis = figure.add_subplot(time_grid[1, 0], sharex=frequency_axis)
+    internal_voltage_axis = figure.add_subplot(time_grid[1, 1], sharex=frequency_axis)
+    resistance_axis = figure.add_subplot(time_grid[2, 0], sharex=frequency_axis)
+    lead_axis = figure.add_subplot(time_grid[2, 1], sharex=frequency_axis)
 
     angle = np.linspace(0.0, 2.0 * math.pi, 400, dtype=float)
-    rotor_axis.plot(np.cos(angle), np.sin(angle), label="_Reference circle")
-    rotor_axis.axhline(0.0, linewidth=0.8)
-    rotor_axis.axvline(0.0, linewidth=0.8)
-    sector_x_values, sector_y_values = calculate_lag_sector_points(0.0, 0.0)
+    rotor_axis.plot(angle, np.ones_like(angle), color="0.35", linewidth=1.0, label="_Reference circle")
+    sector_theta_values, sector_radius_values = calculate_lag_sector_polar_points(0.0, 0.0)
     lag_sector = Polygon(
-        np.column_stack([sector_x_values, sector_y_values]),
+        np.column_stack([sector_theta_values, sector_radius_values]),
         closed=True,
         facecolor="tab:orange",
         alpha=calculate_lag_sector_alpha(0.0),
@@ -1036,15 +1064,44 @@ def generate_rotor_reference_slip_animation(
         zorder=1,
     )
     rotor_axis.add_patch(lag_sector)
-    reference_line, = rotor_axis.plot(
+    reference_line = rotor_axis.annotate(
+        "",
+        xy=(0.0, 1.08),
+        xytext=(0.0, 0.0),
+        xycoords="data",
+        textcoords="data",
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "tab:blue",
+            "linestyle": "--",
+            "linewidth": 2.0,
+        },
+        annotation_clip=False,
+        zorder=3,
+    )
+    rotor_line = rotor_axis.annotate(
+        "",
+        xy=(0.0, 0.82),
+        xytext=(0.0, 0.0),
+        xycoords="data",
+        textcoords="data",
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "tab:green",
+            "linewidth": 2.0,
+        },
+        annotation_clip=False,
+        zorder=4,
+    )
+    rotor_axis.plot(
         [],
         [],
+        color="tab:blue",
         linestyle="--",
         linewidth=2.0,
         label=f"{config.F_NOM_HZ:.0f} Hz reference",
-        zorder=3,
     )
-    rotor_line, = rotor_axis.plot([], [], marker="o", linewidth=2.0, label="Rotor angle", zorder=4)
+    rotor_axis.plot([], [], color="tab:green", linewidth=2.0, label="Rotor angle")
     lead_text = rotor_axis.text(
         0.04,
         0.95,
@@ -1053,30 +1110,15 @@ def generate_rotor_reference_slip_animation(
         va="top",
         fontsize=10,
     )
-    rotor_axis.set_aspect("equal", adjustable="box")
-    rotor_axis.set_xlim(-1.2, 1.2)
-    rotor_axis.set_ylim(-1.2, 1.2)
+    rotor_axis.set_theta_zero_location("E")
+    rotor_axis.set_theta_direction(1)
+    rotor_axis.set_ylim(0.0, 1.2)
+    rotor_axis.set_rticks([0.4, 0.8, 1.2])
+    rotor_axis.set_rlabel_position(315.0)
     rotor_axis.set_title("Slow-Motion Rotor Lag")
-    rotor_axis.set_xlabel(r"$\cos(\theta)$")
-    rotor_axis.set_ylabel(r"$\sin(\theta)$")
     _enable_grid(rotor_axis)
     _fixed_legend(rotor_axis, "lower left")
 
-    phasor_axis.axhline(0.0, linewidth=0.8)
-    phasor_axis.axvline(0.0, linewidth=0.8)
-    phasor_reference_line, = phasor_axis.plot(
-        [0.0, 1.0],
-        [0.0, 0.0],
-        linestyle="--",
-        linewidth=1.4,
-        label="_Internal voltage reference",
-    )
-    internal_voltage_phasor_line, = phasor_axis.plot([], [], marker="o", label="Internal E")
-    terminal_voltage_phasor_line, = phasor_axis.plot([], [], marker="o", label="Terminal V")
-    load_current_phasor_line, = phasor_axis.plot([], [], marker="o", label="Load I")
-    internal_voltage_text = phasor_axis.text(0.0, 0.0, "E", fontsize=9)
-    terminal_voltage_text = phasor_axis.text(0.0, 0.0, "V", fontsize=9)
-    load_current_text = phasor_axis.text(0.0, 0.0, "I", fontsize=9)
     phasor_limit = 1.20 * float(
         np.max(
             np.concatenate(
@@ -1088,12 +1130,71 @@ def generate_rotor_reference_slip_animation(
             )
         )
     )
-    phasor_axis.set_aspect("equal", adjustable="box")
-    phasor_axis.set_xlim(-phasor_limit, phasor_limit)
-    phasor_axis.set_ylim(-phasor_limit, phasor_limit)
+    phasor_reference_line = phasor_axis.annotate(
+        "",
+        xy=(0.0, phasor_limit),
+        xytext=(0.0, 0.0),
+        xycoords="data",
+        textcoords="data",
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "0.45",
+            "linestyle": "--",
+            "linewidth": 1.2,
+        },
+        annotation_clip=False,
+    )
+    internal_voltage_phasor_line = phasor_axis.annotate(
+        "",
+        xy=(0.0, 0.0),
+        xytext=(0.0, 0.0),
+        xycoords="data",
+        textcoords="data",
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "tab:blue",
+            "linewidth": 1.8,
+        },
+        annotation_clip=False,
+    )
+    terminal_voltage_phasor_line = phasor_axis.annotate(
+        "",
+        xy=(0.0, 0.0),
+        xytext=(0.0, 0.0),
+        xycoords="data",
+        textcoords="data",
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "tab:orange",
+            "linewidth": 1.8,
+        },
+        annotation_clip=False,
+    )
+    load_current_phasor_line = phasor_axis.annotate(
+        "",
+        xy=(0.0, 0.0),
+        xytext=(0.0, 0.0),
+        xycoords="data",
+        textcoords="data",
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "tab:green",
+            "linewidth": 1.8,
+        },
+        annotation_clip=False,
+    )
+    phasor_axis.plot([], [], color="tab:blue", linewidth=1.8, label="Internal E")
+    phasor_axis.plot([], [], color="tab:orange", linewidth=1.8, label="Terminal V")
+    phasor_axis.plot([], [], color="tab:green", linewidth=1.8, label="Load I")
+    internal_voltage_text = phasor_axis.text(0.0, 0.0, "E", fontsize=9)
+    terminal_voltage_text = phasor_axis.text(0.0, 0.0, "V", fontsize=9)
+    load_current_text = phasor_axis.text(0.0, 0.0, "I", fontsize=9)
+    phasor_axis.set_theta_zero_location("E")
+    phasor_axis.set_theta_direction(1)
+    phasor_axis.set_ylim(0.0, phasor_limit)
+    phasor_axis.set_rticks(np.linspace(0.0, phasor_limit, 4)[1:])
+    phasor_axis.set_rlabel_position(135.0)
     phasor_axis.set_title("Terminal Phasors")
-    phasor_axis.set_xlabel("Real axis (pu)")
-    phasor_axis.set_ylabel("Imaginary axis (pu)")
     _enable_grid(phasor_axis)
     _fixed_legend(phasor_axis, "lower left")
 
@@ -1222,38 +1323,38 @@ def generate_rotor_reference_slip_animation(
         current_time_s = animation_time_s[frame_index]
         current_reference_angle_rad = float(reference_angle_rad[frame_index])
         current_rotor_angle_rad = float(rotor_angle_rad[frame_index])
-        current_sector_x_values, current_sector_y_values = calculate_lag_sector_points(
+        current_sector_theta_values, current_sector_radius_values = calculate_lag_sector_polar_points(
             current_reference_angle_rad,
             current_rotor_angle_rad,
         )
-        lag_sector.set_xy(np.column_stack([current_sector_x_values, current_sector_y_values]))
+        lag_sector.set_xy(np.column_stack([current_sector_theta_values, current_sector_radius_values]))
         lag_sector.set_alpha(calculate_lag_sector_alpha(float(lead_cycles[frame_index])))
 
-        reference_line.set_data(
-            [0.0, 1.08 * math.cos(current_reference_angle_rad)],
-            [0.0, 1.08 * math.sin(current_reference_angle_rad)],
-        )
-        rotor_line.set_data(
-            [0.0, 0.82 * math.cos(current_rotor_angle_rad)],
-            [0.0, 0.82 * math.sin(current_rotor_angle_rad)],
-        )
+        reference_line.xy = (current_reference_angle_rad, 1.08)
+        reference_line.set_position((current_reference_angle_rad, 0.0))
+        rotor_line.xy = (current_rotor_angle_rad, 0.82)
+        rotor_line.set_position((current_rotor_angle_rad, 0.0))
         current_internal_voltage_pu = float(frame_internal_voltage_pu[frame_index])
         current_terminal_voltage_pu = float(frame_terminal_voltage_pu[frame_index])
         current_load_current_pu = float(frame_load_current_pu[frame_index])
         current_terminal_angle_rad = float(frame_terminal_angle_rad[frame_index])
-        internal_voltage_x = current_internal_voltage_pu
-        internal_voltage_y = 0.0
-        terminal_voltage_x = current_terminal_voltage_pu * math.cos(current_terminal_angle_rad)
-        terminal_voltage_y = current_terminal_voltage_pu * math.sin(current_terminal_angle_rad)
-        load_current_x = current_load_current_pu * math.cos(current_terminal_angle_rad)
-        load_current_y = current_load_current_pu * math.sin(current_terminal_angle_rad)
-        phasor_reference_line.set_data([0.0, phasor_limit], [0.0, 0.0])
-        internal_voltage_phasor_line.set_data([0.0, internal_voltage_x], [0.0, internal_voltage_y])
-        terminal_voltage_phasor_line.set_data([0.0, terminal_voltage_x], [0.0, terminal_voltage_y])
-        load_current_phasor_line.set_data([0.0, load_current_x], [0.0, load_current_y])
-        internal_voltage_text.set_position((internal_voltage_x * 1.04, internal_voltage_y + 0.04))
-        terminal_voltage_text.set_position((terminal_voltage_x * 1.04, terminal_voltage_y * 1.04))
-        load_current_text.set_position((load_current_x * 1.04, load_current_y * 1.04 - 0.08))
+        internal_voltage_angle_rad = 0.0
+        load_current_angle_rad = current_terminal_angle_rad
+        phasor_reference_line.xy = (0.0, phasor_limit)
+        phasor_reference_line.set_position((0.0, 0.0))
+        internal_voltage_phasor_line.xy = (internal_voltage_angle_rad, current_internal_voltage_pu)
+        internal_voltage_phasor_line.set_position((internal_voltage_angle_rad, 0.0))
+        terminal_voltage_phasor_line.xy = (current_terminal_angle_rad, current_terminal_voltage_pu)
+        terminal_voltage_phasor_line.set_position((current_terminal_angle_rad, 0.0))
+        load_current_phasor_line.xy = (load_current_angle_rad, current_load_current_pu)
+        load_current_phasor_line.set_position((load_current_angle_rad, 0.0))
+        internal_voltage_text.set_position(
+            (internal_voltage_angle_rad, current_internal_voltage_pu * 1.06)
+        )
+        terminal_voltage_text.set_position(
+            (current_terminal_angle_rad, current_terminal_voltage_pu * 1.06)
+        )
+        load_current_text.set_position((load_current_angle_rad, current_load_current_pu * 1.06))
         completed_turns = int(math.floor(abs(float(lead_cycles[frame_index]))))
         lead_text.set_text(
             f"Lead = {lead_cycles[frame_index]:+.2f} cycles\nFull turns = {completed_turns}"
