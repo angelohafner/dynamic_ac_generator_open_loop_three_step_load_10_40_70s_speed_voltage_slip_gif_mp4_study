@@ -35,15 +35,18 @@ Default load schedule:
 ```text
 t = 0 s:    load = 0.50 pu
 t = 10 s:   load = 0.80 pu
-t = 40 s:   load = 0.35483294428516376 pu
+t = 40 s:   load = 0.20 pu
 t = 70 s:   load = 0.50 pu
 t = 100 s:  end of simulation
 ```
 
 The first load step makes the rotor slow down. The second load step reduces the
-electrical load enough for the rotor to accelerate above 60 Hz. The third load
-step restores the initial electrical load, so the final open-loop equilibrium
-returns to 60 Hz.
+electrical load strongly enough for the rotor to accelerate above 60 Hz. The
+third load step restores the initial electrical load, so the final open-loop
+equilibrium returns to 60 Hz.
+
+At nominal voltage, the balanced star-connected phase resistances for the four
+load plateaus are `3.20 ohm`, `2.00 ohm`, `8.00 ohm`, and `3.20 ohm`.
 
 The accumulated rotor-reference angle does not have to return to zero when the
 frequency returns to 60 Hz. It is an integral of all previous frequency error,
@@ -77,6 +80,14 @@ Terminal electrical model:
 I_load = E_phase / (R_load + R_s + jX_s)
 V_terminal_phase = I_load R_load
 Pe = 3 |V_terminal_phase|^2 / R_load
+```
+
+Terminal phasor diagram convention:
+
+```text
+V_terminal = |V_terminal| angle 0 deg
+I_load angle = 0 deg for the balanced resistive load
+E_internal angle = -angle(V_terminal in the internal-voltage reference frame)
 ```
 
 Default simplified impedance:
@@ -174,7 +185,11 @@ current-time markers, full background curves, the reference circle, and the lag
 sector are intentionally hidden from legends. The left-column rotating-vector
 and terminal-phasor panels use Matplotlib polar projection; fasors use arrows
 instead of endpoint markers. The terminal phasor radial grid is fixed at `0.5`,
-`1.0`, and `1.5` pu, and the rotor lag text uses an opaque white background.
+`1.0`, and `1.5` pu. The terminal phasor diagram uses terminal voltage as the
+angular reference, so `V_terminal` is drawn at `0 deg`; for the default purely
+resistive load, `I_load` is also drawn at `0 deg`, and `E_internal` is drawn
+relative to that terminal-voltage reference. The rotor lag text uses an opaque
+white background.
 
 ## Module Responsibilities
 
@@ -278,6 +293,7 @@ The open-loop validation checks that:
 - final frequency reaches the theoretical open-loop equilibrium
 - frequency increases after the second load reduction
 - frequency decreases after the third load restoration
+- terminal phasors are drawn relative to `V_terminal = |V_terminal| angle 0 deg`
 - phase voltages are displaced by approximately 120 degrees
 - total instantaneous power varies smoothly for a balanced resistive load
 - power and speed-derivative signs are consistent
@@ -309,6 +325,8 @@ A new Codex session should:
     background.
 15. Do not reintroduce `results/animations/06_rotor_reference_slip.gif`; this
     animation is intentionally MP4-only.
+16. Keep the terminal phasor panel referenced to terminal voltage:
+    `V_terminal = |V_terminal| angle 0 deg`.
 
 When changing load-step timing, update:
 

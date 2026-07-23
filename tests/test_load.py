@@ -12,7 +12,7 @@ def test_resistive_load_returns_expected_power_before_and_after_step() -> None:
 
     assert math.isclose(load.electrical_power_pu_at(9.0), 0.5, rel_tol=1e-12)
     assert math.isclose(load.electrical_power_pu_at(10.0), 0.8, rel_tol=1e-12)
-    assert math.isclose(load.electrical_power_pu_at(40.0), config.SECOND_STEP_LOAD_PU, rel_tol=1e-12)
+    assert math.isclose(load.electrical_power_pu_at(40.0), 0.2, rel_tol=1e-12)
     assert math.isclose(load.electrical_power_pu_at(70.0), config.INITIAL_LOAD_PU, rel_tol=1e-12)
 
 
@@ -32,8 +32,8 @@ def test_resistive_load_supports_array_inputs() -> None:
                 0.5,
                 0.8,
                 0.8,
-                config.SECOND_STEP_LOAD_PU,
-                config.SECOND_STEP_LOAD_PU,
+                0.2,
+                0.2,
                 config.INITIAL_LOAD_PU,
                 config.INITIAL_LOAD_PU,
             ],
@@ -48,8 +48,8 @@ def test_resistive_load_supports_array_inputs() -> None:
                 3.2,
                 2.0,
                 2.0,
-                config.resistance_for_load_power_pu(config.SECOND_STEP_LOAD_PU),
-                config.resistance_for_load_power_pu(config.SECOND_STEP_LOAD_PU),
+                8.0,
+                8.0,
                 config.initial_resistance_ohm,
                 config.initial_resistance_ohm,
             ],

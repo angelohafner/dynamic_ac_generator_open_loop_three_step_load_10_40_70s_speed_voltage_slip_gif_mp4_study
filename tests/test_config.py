@@ -15,6 +15,12 @@ def test_default_config_calculates_phase_resistances() -> None:
     assert math.isclose(config.initial_resistance_ohm, 3.2, rel_tol=1e-12)
     assert math.isclose(config.first_step_resistance_ohm, 2.0, rel_tol=1e-12)
     assert math.isclose(config.final_resistance_ohm, config.initial_resistance_ohm, rel_tol=1e-12)
+    assert config.load_schedule == (
+        (0.0, 0.5),
+        (10.0, 0.8),
+        (40.0, 0.2),
+        (70.0, 0.5),
+    )
     assert config.load_step_times_s == (10.0, 40.0, 70.0)
     assert math.isclose(config.final_load_pu, config.INITIAL_LOAD_PU, rel_tol=1e-12)
 

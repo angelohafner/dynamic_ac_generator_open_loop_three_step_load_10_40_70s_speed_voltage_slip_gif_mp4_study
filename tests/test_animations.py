@@ -328,6 +328,18 @@ def test_rotor_reference_slip_includes_phasor_panel_below_rotor() -> None:
     assert "load_current_phase_rms" in source
 
 
+def test_terminal_phasors_use_terminal_voltage_as_angle_reference() -> None:
+    assert hasattr(animation, "calculate_terminal_reference_phasor_angles")
+
+    internal_angle_rad, terminal_angle_rad, load_current_angle_rad = (
+        animation.calculate_terminal_reference_phasor_angles(-0.35)
+    )
+
+    assert np.isclose(internal_angle_rad, 0.35)
+    assert np.isclose(terminal_angle_rad, 0.0)
+    assert np.isclose(load_current_angle_rad, 0.0)
+
+
 def test_rotor_reference_slip_uses_absolute_simulation_time_axis() -> None:
     source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
 

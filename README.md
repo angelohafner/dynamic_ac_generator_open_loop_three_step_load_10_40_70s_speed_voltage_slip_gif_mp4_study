@@ -34,7 +34,7 @@ The default load schedule is:
 ```text
 t = 0 s:    load = 0.50 pu
 t = 10 s:   load = 0.80 pu
-t = 40 s:   load = 0.35483294428516376 pu
+t = 40 s:   load = 0.20 pu
 t = 70 s:   load = 0.50 pu
 t = 100 s:  end of simulation
 ```
@@ -43,9 +43,19 @@ Interpretation:
 
 - `0 s` to `10 s`: steady at 60 Hz.
 - After `10 s`: electrical load increases and the rotor slows down.
-- After `40 s`: electrical load decreases enough for the rotor to accelerate above 60 Hz.
+- After `40 s`: electrical load decreases strongly and the rotor accelerates above 60 Hz.
 - After `70 s`: load returns to the initial value and the frequency tends back toward 60 Hz.
 - By `100 s`: the frequency is close to the final theoretical open-loop equilibrium.
+
+At nominal voltage, the balanced star-connected phase resistances for the four
+load plateaus are:
+
+```text
+0.50 pu -> 3.20 ohm per phase
+0.80 pu -> 2.00 ohm per phase
+0.20 pu -> 8.00 ohm per phase
+0.50 pu -> 3.20 ohm per phase
+```
 
 The accumulated rotor-reference angle does not necessarily return to zero when
 frequency returns to 60 Hz. The angle is an integral of all previous frequency
@@ -83,6 +93,14 @@ Balanced terminal phasor model:
 I_load = E_phase / (R_load + R_s + jX_s)
 V_terminal_phase = I_load R_load
 Pe = 3 |V_terminal_phase|^2 / R_load
+```
+
+Terminal phasor diagram convention:
+
+```text
+V_terminal = |V_terminal| angle 0 deg
+I_load angle = 0 deg for the balanced resistive load
+E_internal angle = -angle(V_terminal in the internal-voltage reference frame)
 ```
 
 Open-loop equilibrium with `D = 0`:
@@ -170,9 +188,13 @@ current-time markers, full background curves, the reference circle, and the lag
 sector are intentionally hidden from legends. The rotating-vector panel and the
 terminal phasor panel both use Matplotlib polar axes. The terminal phasors are
 drawn as arrows, not endpoint dots, so the arrowhead marks the fasor direction.
-The terminal phasor radial grid uses fixed circular ticks at `0.5`, `1.0`, and
-`1.5` pu. The rotor lag text uses an opaque white background so `Lead` and
-`Full turns` remain readable over the polar grid.
+The terminal phasor panel uses the terminal voltage as the angular reference:
+`V_terminal = |V_terminal| angle 0 deg`. Because the default load is purely
+resistive, the load-current fasor is also drawn at `0 deg`, while the internal
+voltage fasor is drawn relative to that terminal-voltage reference. The terminal
+phasor radial grid uses fixed circular ticks at `0.5`, `1.0`, and `1.5` pu. The
+rotor lag text uses an opaque white background so `Lead` and `Full turns` remain
+readable over the polar grid.
 
 ## Project Structure
 
@@ -357,6 +379,7 @@ The tests cover:
 - nominal initial operating point
 - load schedule at `10 s`, `40 s`, and `70 s`
 - balanced resistive load resistance calculations
+- terminal-voltage-reference phasor convention
 - open-loop field-current behavior
 - generated voltage proportional to field current and speed
 - terminal-voltage drop after the first load increase
@@ -376,7 +399,7 @@ After the default run, the expected qualitative behavior is:
 
 - `0 s` to `10 s`: steady at 60 Hz
 - after `10 s`: frequency decreases because electrical load increases
-- after `40 s`: frequency increases because electrical load decreases
+- after `40 s`: frequency increases because electrical load decreases to `0.20 pu`
 - after `70 s`: frequency decreases toward 60 Hz because load returns to the initial value
 - by `100 s`: frequency is close to the final theoretical open-loop equilibrium
 
@@ -410,6 +433,9 @@ This repository is intended to be self-contained. A new Codex session should:
 13. Keep the terminal phasor radial grid fixed at `0.5`, `1.0`, and `1.5`.
 14. Keep the rotor lag `Lead` and `Full turns` text on an opaque white
     background.
+15. Keep the terminal phasor diagram referenced to terminal voltage:
+    `V_terminal = |V_terminal| angle 0 deg`; for the default resistive load,
+    draw `I_load` at `0 deg` and draw `E_internal` relative to that reference.
 
 When changing load-step timing, update:
 

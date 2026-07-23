@@ -35,7 +35,7 @@ class SimulationConfig:
     INITIAL_LOAD_PU: float = 0.50
     FINAL_LOAD_PU: float = 0.80
     SECOND_LOAD_STEP_TIME_S: float | None = 40.0
-    SECOND_STEP_LOAD_PU: float | None = 0.35483294428516376
+    SECOND_STEP_LOAD_PU: float | None = 0.20
     THIRD_LOAD_STEP_TIME_S: float | None = 70.0
     THIRD_STEP_LOAD_PU: float | None = 0.50
     ADDITIONAL_LOAD_STEPS: tuple[tuple[float, float], ...] | None = None

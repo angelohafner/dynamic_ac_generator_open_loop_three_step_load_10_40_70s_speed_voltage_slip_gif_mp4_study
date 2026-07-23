@@ -1,27 +1,27 @@
 metric,value,unit
 Nominal frequency,60.0,Hz
 Damping coefficient,0.0,pu
-Minimum frequency,49.80090013970297,Hz
-Maximum frequency,69.67586104543926,Hz
-Final frequency,60.06036117962027,Hz
+Minimum frequency,49.8009001397033,Hz
+Maximum frequency,89.91919067766908,Hz
+Final frequency,60.16157934036543,Hz
 Theoretical final frequency,60.0,Hz
 Open-loop frequency time constant,6.000000000000001,s
-Approximate open-loop settling time,87.97439364132394,s
-Maximum frequency deviation,10.199099860297032,Hz
+Approximate open-loop settling time,94.95237369788126,s
+Maximum frequency deviation,29.91919067766908,Hz
 Time of minimum frequency,40.0,s
 Initial electrical power,0.5,pu
-Final electrical power,0.5010065256981164,pu
+Final electrical power,0.5026966151009841,pu
 Initial mechanical power,0.49999999999999994,pu
 Final mechanical power,0.49999999999999994,pu
 Initial field current,1.0,pu
 Final field current,1.0,pu
 Initial internal voltage,416.19226326302606,V LL RMS
-Final internal voltage,416.61096086234915,V LL RMS
+Final internal voltage,417.3130644524133,V LL RMS
 Initial terminal voltage,400.0,V LL RMS
-Final terminal voltage,400.40240786413517,V LL RMS
+Final terminal voltage,401.07719560243623,V LL RMS
 Initial load current,72.16878364870321,A phase RMS
-Final load current,72.24138686391647,A phase RMS
+Final load current,72.3631333896521,A phase RMS
 Initial resistance,3.2000000000000006,ohm
 Final resistance,3.2000000000000006,ohm
-Settling time,87.337,s
-Steady-state frequency error,-0.060361179620272765,Hz
+Settling time,93.24000000000001,s
+Steady-state frequency error,-0.16157934036542798,Hz

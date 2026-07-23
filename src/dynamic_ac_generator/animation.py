@@ -268,6 +268,17 @@ def calculate_lag_sector_alpha(
     return float(np.clip(alpha, base_alpha, max_alpha))
 
 
+def calculate_terminal_reference_phasor_angles(
+    terminal_voltage_angle_rad: float,
+) -> tuple[float, float, float]:
+    """Return internal-voltage, terminal-voltage, and load-current angles relative to Vt."""
+    terminal_reference_angle_rad = float(terminal_voltage_angle_rad)
+    internal_voltage_angle_rad = -terminal_reference_angle_rad
+    terminal_voltage_angle_rad = 0.0
+    load_current_angle_rad = 0.0
+    return internal_voltage_angle_rad, terminal_voltage_angle_rad, load_current_angle_rad
+
+
 def _interpolate(values: FloatArray, source_time_s: FloatArray, frame_times_s: FloatArray) -> FloatArray:
     """Interpolate a time-series at animation frame times."""
     return np.interp(frame_times_s, source_time_s, values).astype(float)
@@ -1344,21 +1355,22 @@ def generate_rotor_reference_slip_animation(
         current_terminal_voltage_pu = float(frame_terminal_voltage_pu[frame_index])
         current_load_current_pu = float(frame_load_current_pu[frame_index])
         current_terminal_angle_rad = float(frame_terminal_angle_rad[frame_index])
-        internal_voltage_angle_rad = 0.0
-        load_current_angle_rad = current_terminal_angle_rad
+        internal_voltage_angle_rad, terminal_voltage_angle_rad, load_current_angle_rad = (
+            calculate_terminal_reference_phasor_angles(current_terminal_angle_rad)
+        )
         phasor_reference_line.xy = (0.0, phasor_limit)
         phasor_reference_line.set_position((0.0, 0.0))
         internal_voltage_phasor_line.xy = (internal_voltage_angle_rad, current_internal_voltage_pu)
         internal_voltage_phasor_line.set_position((internal_voltage_angle_rad, 0.0))
-        terminal_voltage_phasor_line.xy = (current_terminal_angle_rad, current_terminal_voltage_pu)
-        terminal_voltage_phasor_line.set_position((current_terminal_angle_rad, 0.0))
+        terminal_voltage_phasor_line.xy = (terminal_voltage_angle_rad, current_terminal_voltage_pu)
+        terminal_voltage_phasor_line.set_position((terminal_voltage_angle_rad, 0.0))
         load_current_phasor_line.xy = (load_current_angle_rad, current_load_current_pu)
         load_current_phasor_line.set_position((load_current_angle_rad, 0.0))
         internal_voltage_text.set_position(
             (internal_voltage_angle_rad, current_internal_voltage_pu * 1.06)
         )
         terminal_voltage_text.set_position(
-            (current_terminal_angle_rad, current_terminal_voltage_pu * 1.06)
+            (terminal_voltage_angle_rad, current_terminal_voltage_pu * 1.06)
         )
         load_current_text.set_position((load_current_angle_rad, current_load_current_pu * 1.06))
         completed_turns = int(math.floor(abs(float(lead_cycles[frame_index]))))
