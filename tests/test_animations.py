@@ -187,14 +187,8 @@ def test_slow_motion_slip_animation_uses_dense_smooth_playback() -> None:
     assert np.isclose(config.SLIP_ANIMATION_DURATION_S, 90.0)
 
 
-def test_rotor_reference_slip_mp4_path_matches_gif_path() -> None:
-    assert hasattr(animation, "mp4_path_for_gif")
-
-    gif_path = animation.Path("results/animations/06_rotor_reference_slip.gif")
-
-    assert animation.mp4_path_for_gif(gif_path).as_posix().endswith(
-        "results/animations/06_rotor_reference_slip.mp4"
-    )
+def test_rotor_reference_slip_does_not_keep_gif_pair_helper() -> None:
+    assert not hasattr(animation, "mp4_path_for_gif")
 
 
 def test_animation_grid_uses_half_opacity() -> None:
@@ -257,7 +251,34 @@ def test_rotor_reference_slip_uses_latex_axis_labels_and_dashed_references() -> 
     assert 'linestyle="--", label="Nominal frequency"' in source
     assert 'linestyle="--", label="Nominal voltage"' in source
     assert 'linestyle="--", label="Zero lag"' in source
-    assert "save_mp4=True" in source
+    assert '"06_rotor_reference_slip.mp4"' in source
+
+
+def test_rotor_reference_slip_renders_mp4_without_gif_export() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert '"06_rotor_reference_slip.mp4"' in source
+    assert '"06_rotor_reference_slip.gif"' not in source
+    assert "save_mp4=True" not in source
+
+
+def test_rotor_reference_slip_includes_load_resistance_panel() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert "frame_load_resistance_ohm" in source
+    assert "Load Resistance" in source
+    assert "Resistance (ohm)" in source
+    assert "results.load_resistance_ohm" in source
+
+
+def test_rotor_reference_slip_includes_phasor_panel_below_rotor() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert "phasor_axis" in source
+    assert "Terminal Phasors" in source
+    assert "frame_terminal_angle_rad" in source
+    assert "frame_load_current_pu" in source
+    assert "load_current_phase_rms" in source
 
 
 def test_rotor_reference_slip_uses_absolute_simulation_time_axis() -> None:

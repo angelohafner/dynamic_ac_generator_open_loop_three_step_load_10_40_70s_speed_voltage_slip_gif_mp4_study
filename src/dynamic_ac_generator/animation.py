@@ -244,35 +244,42 @@ def _interpolate(values: FloatArray, source_time_s: FloatArray, frame_times_s: F
     return np.interp(frame_times_s, source_time_s, values).astype(float)
 
 
-def mp4_path_for_gif(gif_path: Path) -> Path:
-    """Return the MP4 path paired with a GIF animation path."""
-    return gif_path.with_suffix(".mp4")
-
-
 def _save_animation(
     animation: FuncAnimation,
     output_path: Path,
     config: SimulationConfig,
     fps: int | None = None,
-    save_mp4: bool = False,
 ) -> Path:
-    """Save a Matplotlib animation as a GIF file and optionally as MP4."""
+    """Save a Matplotlib animation as a GIF file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     active_fps = fps if fps is not None else config.ANIMATION_FPS
     gif_writer = PillowWriter(fps=active_fps)
     try:
         animation.save(output_path, writer=gif_writer, dpi=config.ANIMATION_DPI)
-        if save_mp4:
-            mp4_writer = FFMpegWriter(
-                fps=active_fps,
-                codec="libx264",
-                extra_args=["-pix_fmt", "yuv420p"],
-            )
-            animation.save(
-                mp4_path_for_gif(output_path),
-                writer=mp4_writer,
-                dpi=config.ANIMATION_DPI,
-            )
+    finally:
+        plt.close(animation._fig)
+    return output_path
+
+
+def _save_mp4_animation(
+    animation: FuncAnimation,
+    output_path: Path,
+    config: SimulationConfig,
+    fps: int | None = None,
+) -> Path:
+    """Save a Matplotlib animation directly as MP4 and remove a stale paired GIF."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    active_fps = fps if fps is not None else config.ANIMATION_FPS
+    stale_gif_path = output_path.with_suffix(".gif")
+    if stale_gif_path.exists():
+        stale_gif_path.unlink()
+    mp4_writer = FFMpegWriter(
+        fps=active_fps,
+        codec="libx264",
+        extra_args=["-pix_fmt", "yuv420p"],
+    )
+    try:
+        animation.save(output_path, writer=mp4_writer, dpi=config.ANIMATION_DPI)
     finally:
         plt.close(animation._fig)
     return output_path
@@ -976,24 +983,43 @@ def generate_rotor_reference_slip_animation(
         results.time_s,
         active_frame_times_s,
     )
+    frame_load_resistance_ohm = _interpolate(
+        results.load_resistance_ohm,
+        results.time_s,
+        active_frame_times_s,
+    )
+    frame_terminal_angle_rad = _interpolate(
+        results.terminal_voltage_angle_rad,
+        results.time_s,
+        active_frame_times_s,
+    )
+    frame_internal_voltage_pu = frame_internal_voltage_v / config.V_LL_RMS
+    frame_terminal_voltage_pu = frame_terminal_voltage_v / config.V_LL_RMS
+    base_current_a = config.S_BASE_VA / (math.sqrt(3.0) * config.V_LL_RMS)
+    frame_load_current_pu = (
+        _interpolate(results.load_current_phase_rms, results.time_s, active_frame_times_s)
+        / base_current_a
+    )
     reference_angle_rad, rotor_angle_rad, lead_cycles = calculate_slow_motion_display_angles(
         results,
         active_frame_times_s,
     )
 
-    figure = plt.figure(figsize=(12.4, 8.4))
+    figure = plt.figure(figsize=(13.2, 10.2))
     grid = figure.add_gridspec(
-        3,
+        4,
         3,
         width_ratios=[1.15, 1.35, 1.35],
-        height_ratios=[1.0, 1.0, 1.05],
+        height_ratios=[1.0, 1.0, 0.90, 0.95],
     )
-    rotor_axis = figure.add_subplot(grid[:, 0])
+    rotor_axis = figure.add_subplot(grid[0:2, 0])
+    phasor_axis = figure.add_subplot(grid[2:, 0])
     frequency_axis = figure.add_subplot(grid[0, 1])
     voltage_axis = figure.add_subplot(grid[0, 2], sharex=frequency_axis)
     power_axis = figure.add_subplot(grid[1, 1], sharex=frequency_axis)
     internal_voltage_axis = figure.add_subplot(grid[1, 2], sharex=frequency_axis)
-    lead_axis = figure.add_subplot(grid[2, 1:], sharex=frequency_axis)
+    resistance_axis = figure.add_subplot(grid[2, 1:], sharex=frequency_axis)
+    lead_axis = figure.add_subplot(grid[3, 1:], sharex=frequency_axis)
 
     angle = np.linspace(0.0, 2.0 * math.pi, 400, dtype=float)
     rotor_axis.plot(np.cos(angle), np.sin(angle), label="_Reference circle")
@@ -1035,6 +1061,41 @@ def generate_rotor_reference_slip_animation(
     rotor_axis.set_ylabel(r"$\sin(\theta)$")
     _enable_grid(rotor_axis)
     _fixed_legend(rotor_axis, "lower left")
+
+    phasor_axis.axhline(0.0, linewidth=0.8)
+    phasor_axis.axvline(0.0, linewidth=0.8)
+    phasor_reference_line, = phasor_axis.plot(
+        [0.0, 1.0],
+        [0.0, 0.0],
+        linestyle="--",
+        linewidth=1.4,
+        label="_Internal voltage reference",
+    )
+    internal_voltage_phasor_line, = phasor_axis.plot([], [], marker="o", label="Internal E")
+    terminal_voltage_phasor_line, = phasor_axis.plot([], [], marker="o", label="Terminal V")
+    load_current_phasor_line, = phasor_axis.plot([], [], marker="o", label="Load I")
+    internal_voltage_text = phasor_axis.text(0.0, 0.0, "E", fontsize=9)
+    terminal_voltage_text = phasor_axis.text(0.0, 0.0, "V", fontsize=9)
+    load_current_text = phasor_axis.text(0.0, 0.0, "I", fontsize=9)
+    phasor_limit = 1.20 * float(
+        np.max(
+            np.concatenate(
+                [
+                    frame_internal_voltage_pu,
+                    frame_terminal_voltage_pu,
+                    frame_load_current_pu,
+                ]
+            )
+        )
+    )
+    phasor_axis.set_aspect("equal", adjustable="box")
+    phasor_axis.set_xlim(-phasor_limit, phasor_limit)
+    phasor_axis.set_ylim(-phasor_limit, phasor_limit)
+    phasor_axis.set_title("Terminal Phasors")
+    phasor_axis.set_xlabel("Real axis (pu)")
+    phasor_axis.set_ylabel("Imaginary axis (pu)")
+    _enable_grid(phasor_axis)
+    _fixed_legend(phasor_axis, "lower left")
 
     frequency_axis.plot(
         animation_time_s,
@@ -1093,6 +1154,18 @@ def generate_rotor_reference_slip_animation(
     _enable_grid(internal_voltage_axis)
     _fixed_legend(internal_voltage_axis, "upper right")
 
+    resistance_axis.plot(
+        animation_time_s,
+        frame_load_resistance_ohm,
+        alpha=0.25,
+        label="_Full load resistance",
+    )
+    resistance_line, = resistance_axis.plot([], [], label="Load resistance")
+    resistance_axis.set_title("Load Resistance")
+    resistance_axis.set_ylabel("Resistance (ohm)")
+    _enable_grid(resistance_axis)
+    _fixed_legend(resistance_axis, "upper right")
+
     lead_axis.plot(
         animation_time_s,
         lead_cycles,
@@ -1112,6 +1185,7 @@ def generate_rotor_reference_slip_animation(
         voltage_axis,
         power_axis,
         internal_voltage_axis,
+        resistance_axis,
         lead_axis,
     ]
     current_markers = [
@@ -1140,6 +1214,7 @@ def generate_rotor_reference_slip_animation(
         )
     )
     internal_voltage_axis.set_ylim(*_axis_limits(frame_internal_voltage_v))
+    resistance_axis.set_ylim(*_axis_limits(frame_load_resistance_ohm))
     lead_axis.set_ylim(*_axis_limits(lead_cycles))
 
     def update(frame_index: int) -> list[object]:
@@ -1162,6 +1237,23 @@ def generate_rotor_reference_slip_animation(
             [0.0, 0.82 * math.cos(current_rotor_angle_rad)],
             [0.0, 0.82 * math.sin(current_rotor_angle_rad)],
         )
+        current_internal_voltage_pu = float(frame_internal_voltage_pu[frame_index])
+        current_terminal_voltage_pu = float(frame_terminal_voltage_pu[frame_index])
+        current_load_current_pu = float(frame_load_current_pu[frame_index])
+        current_terminal_angle_rad = float(frame_terminal_angle_rad[frame_index])
+        internal_voltage_x = current_internal_voltage_pu
+        internal_voltage_y = 0.0
+        terminal_voltage_x = current_terminal_voltage_pu * math.cos(current_terminal_angle_rad)
+        terminal_voltage_y = current_terminal_voltage_pu * math.sin(current_terminal_angle_rad)
+        load_current_x = current_load_current_pu * math.cos(current_terminal_angle_rad)
+        load_current_y = current_load_current_pu * math.sin(current_terminal_angle_rad)
+        phasor_reference_line.set_data([0.0, phasor_limit], [0.0, 0.0])
+        internal_voltage_phasor_line.set_data([0.0, internal_voltage_x], [0.0, internal_voltage_y])
+        terminal_voltage_phasor_line.set_data([0.0, terminal_voltage_x], [0.0, terminal_voltage_y])
+        load_current_phasor_line.set_data([0.0, load_current_x], [0.0, load_current_y])
+        internal_voltage_text.set_position((internal_voltage_x * 1.04, internal_voltage_y + 0.04))
+        terminal_voltage_text.set_position((terminal_voltage_x * 1.04, terminal_voltage_y * 1.04))
+        load_current_text.set_position((load_current_x * 1.04, load_current_y * 1.04 - 0.08))
         completed_turns = int(math.floor(abs(float(lead_cycles[frame_index]))))
         lead_text.set_text(
             f"Lead = {lead_cycles[frame_index]:+.2f} cycles\nFull turns = {completed_turns}"
@@ -1186,6 +1278,10 @@ def generate_rotor_reference_slip_animation(
             animation_time_s[current_slice],
             frame_internal_voltage_v[current_slice],
         )
+        resistance_line.set_data(
+            animation_time_s[current_slice],
+            frame_load_resistance_ohm[current_slice],
+        )
         lead_line.set_data(
             animation_time_s[current_slice],
             lead_cycles[current_slice],
@@ -1197,11 +1293,19 @@ def generate_rotor_reference_slip_animation(
             reference_line,
             rotor_line,
             lead_text,
+            phasor_reference_line,
+            internal_voltage_phasor_line,
+            terminal_voltage_phasor_line,
+            load_current_phasor_line,
+            internal_voltage_text,
+            terminal_voltage_text,
+            load_current_text,
             frequency_line,
             voltage_line,
             mechanical_power_line,
             electrical_power_line,
             internal_voltage_line,
+            resistance_line,
             lead_line,
             *current_markers,
         ]
@@ -1214,12 +1318,11 @@ def generate_rotor_reference_slip_animation(
         blit=False,
     )
     figure.tight_layout()
-    return _save_animation(
+    return _save_mp4_animation(
         animation,
-        output_dir / "06_rotor_reference_slip.gif",
+        output_dir / "06_rotor_reference_slip.mp4",
         config,
         config.SLIP_ANIMATION_FPS,
-        save_mp4=True,
     )
 
 
@@ -1239,7 +1342,4 @@ def generate_all_animations(
         generate_open_loop_voltage_animation(results, output_dir, frame_times_s),
         generate_rotor_reference_slip_animation(results, output_dir, slip_frame_times_s),
     ]
-    slip_mp4_path = mp4_path_for_gif(output_dir / "06_rotor_reference_slip.gif")
-    if slip_mp4_path.exists():
-        animation_paths.append(slip_mp4_path)
     return animation_paths

@@ -15,7 +15,7 @@ from dynamic_ac_generator.simulation import DynamicSimulation
 
 
 def main() -> None:
-    """Regenerate only the rotor-reference slip GIF and MP4 outputs."""
+    """Regenerate only the rotor-reference slip MP4 output."""
     config = SimulationConfig()
     results = DynamicSimulation(config).run()
     output_path = generate_rotor_reference_slip_animation(
@@ -23,7 +23,6 @@ def main() -> None:
         PROJECT_ROOT / "results" / "animations",
     )
     print(f"Saved {output_path}")
-    print(f"Saved {output_path.with_suffix('.mp4')}")
 
 
 if __name__ == "__main__":

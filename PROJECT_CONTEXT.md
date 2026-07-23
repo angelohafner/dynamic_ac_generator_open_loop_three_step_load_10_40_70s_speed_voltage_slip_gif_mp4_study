@@ -148,9 +148,18 @@ not the simulated physical time.
 The `06_rotor_reference_slip` animation is a synchronized multi-panel figure:
 
 ```text
-left panel: slow reference vector, rotor vector, and shaded lag sector
-right panels: frequency, terminal voltage, power balance, internal voltage, accumulated lead
+left upper panel: slow reference vector, rotor vector, and shaded lag sector
+left lower panel: terminal phasor diagram
+right panels: frequency, terminal voltage, power balance, internal voltage, load resistance, accumulated lead
 ```
+
+This animation is intentionally rendered only as:
+
+```text
+results/animations/06_rotor_reference_slip.mp4
+```
+
+No paired `06_rotor_reference_slip.gif` should be produced for this animation.
 
 The shaded sector starts at 20 percent opacity and becomes more opaque as the
 absolute accumulated lead or lag grows:
@@ -206,7 +215,7 @@ Optional PI speed-governed case:
 python scripts/run_simulation.py --control-mode pi
 ```
 
-Regenerate only the corrected `06_rotor_reference_slip` GIF and MP4:
+Regenerate only the corrected `06_rotor_reference_slip` MP4:
 
 ```powershell
 python tools/regenerate_slip_animation.py
@@ -228,11 +237,8 @@ results/animations/*.gif
 results/animations/06_rotor_reference_slip.mp4
 ```
 
-The MP4 is generated from the same Matplotlib animation object used for:
-
-```text
-results/animations/06_rotor_reference_slip.gif
-```
+The other default animations remain GIF files. The `06_rotor_reference_slip`
+animation is MP4-only.
 
 Important dynamic output columns:
 
@@ -281,14 +287,18 @@ A new Codex session should:
 3. Inspect `src/dynamic_ac_generator/config.py` before changing scenario values.
 4. Use `pytest` for regression checks.
 5. Use `python scripts/run_simulation.py` to regenerate outputs.
-6. Use `python tools/regenerate_slip_animation.py` when only the long slip GIF
-   and MP4 need to be rebuilt.
+6. Use `python tools/regenerate_slip_animation.py` when only the long slip MP4
+   needs to be rebuilt.
 7. Keep `06_rotor_reference_slip` on absolute simulation time. The x-axis must
    show `10 s`, `40 s`, and `70 s` for the load changes. Do not convert this
    figure to time relative to the first load step.
 8. Distinguish MP4 playback duration from physical simulation time: the current
    video plays for about `60.125 s`, while the simulation shown by the axis goes
    from `9 s` to `100 s`.
+9. Keep the load-resistance chart in the right-side time-series stack.
+10. Keep the terminal phasor diagram directly below the rotating vectors.
+11. Do not reintroduce `results/animations/06_rotor_reference_slip.gif`; this
+    animation is intentionally MP4-only.
 
 When changing load-step timing, update:
 
@@ -300,7 +310,6 @@ When changing load-step timing, update:
 - tests in `tests/test_config.py`, `tests/test_load.py`, and `tests/test_animations.py`
 - `README.md`
 - `PROJECT_CONTEXT.md`
-- regenerate `results/animations/06_rotor_reference_slip.gif`
 - regenerate `results/animations/06_rotor_reference_slip.mp4`
 
 ## Known Limitations

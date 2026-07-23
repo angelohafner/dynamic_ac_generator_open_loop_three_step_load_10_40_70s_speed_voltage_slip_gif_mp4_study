@@ -131,7 +131,7 @@ at `9 s` and ends at `100 s`. That covers 1 s before the first step and 90 s
 after it.
 
 The chart x-axis uses absolute simulation time. Therefore the load-change
-markers appear at `10 s`, `40 s`, and `70 s` in the rendered GIF and MP4.
+markers appear at `10 s`, `40 s`, and `70 s` in the rendered MP4.
 This is intentional: the MP4 playback length is not the same quantity as the
 simulated time shown on the x-axis.
 
@@ -152,11 +152,13 @@ physical simulation seconds.
 The synchronized `06_rotor_reference_slip` animation contains:
 
 - a slow reference vector and a rotor vector
+- a terminal phasor diagram below the rotating vectors
 - a shaded rotor-reference lag sector
 - frequency
 - terminal voltage
 - mechanical and electrical power
 - internal voltage
+- load resistance in ohms
 - accumulated reference lead
 
 The shaded sector starts at 20 percent opacity and becomes more opaque as the
@@ -217,8 +219,8 @@ one for the current generated artifacts is:
 tools/regenerate_slip_animation.py
 ```
 
-It regenerates only `results/animations/06_rotor_reference_slip.gif` and
-`results/animations/06_rotor_reference_slip.mp4`.
+It regenerates only `results/animations/06_rotor_reference_slip.mp4`. This
+animation is intentionally MP4-only; the paired GIF is removed if it exists.
 
 ## Module Responsibilities
 
@@ -279,7 +281,7 @@ Run with a custom damping coefficient:
 python scripts/run_simulation.py --damping 2.0 --simulation-time 100
 ```
 
-Regenerate only the corrected rotor-reference slip GIF and MP4:
+Regenerate only the corrected rotor-reference slip MP4:
 
 ```powershell
 python tools/regenerate_slip_animation.py
@@ -309,9 +311,12 @@ results/animations/02_rotor_three_phase_waveforms.gif
 results/animations/03_unregulated_power_imbalance.gif
 results/animations/04_unregulated_damping_comparison.gif
 results/animations/05_open_loop_voltage_frequency.gif
-results/animations/06_rotor_reference_slip.gif
 results/animations/06_rotor_reference_slip.mp4
 ```
+
+The `06_rotor_reference_slip.mp4` animation is the only default animation that
+is rendered directly as MP4 without a GIF companion. It includes the load
+resistance panel and the terminal phasor diagram.
 
 Important static figures:
 
@@ -367,7 +372,7 @@ The tests cover:
 - hidden auxiliary legend items
 - 50 percent grid opacity
 - LaTeX rotor-axis labels
-- GIF and MP4 export hooks
+- MP4-only export hook for the long rotor-reference slip animation
 
 ## Current Verified Behavior
 
@@ -389,10 +394,10 @@ This repository is intended to be self-contained. A new Codex session should:
 4. Use `pytest` for regression checks.
 5. Use `python scripts/run_simulation.py` to regenerate all outputs.
 6. Use `python tools/regenerate_slip_animation.py` when only the long
-   rotor-reference slip GIF and MP4 need to be rebuilt.
-7. Remember that `results/animations/06_rotor_reference_slip.gif` and
-   `results/animations/06_rotor_reference_slip.mp4` are generated from the same
-   Matplotlib animation object.
+   rotor-reference slip MP4 needs to be rebuilt.
+7. Remember that `results/animations/06_rotor_reference_slip.mp4` is
+   intentionally MP4-only. Do not reintroduce a paired
+   `results/animations/06_rotor_reference_slip.gif` output for this animation.
 8. Do not interpret the MP4 duration as simulated time. The video currently
    plays for about `60.125 s`, while the physical simulation axis shown in the
    animation goes from `9 s` to `100 s`.
@@ -401,6 +406,9 @@ This repository is intended to be self-contained. A new Codex session should:
    this figure; otherwise the load markers visually become `0 s`, `30 s`, and
    `60 s` even though the simulation is configured for `10 s`, `40 s`, and
    `70 s`.
+10. Keep the load-resistance panel on the absolute simulation-time axis and
+    keep the terminal phasor diagram below the rotating vectors in the left
+    column.
 
 When changing load-step timing, update:
 
@@ -412,7 +420,6 @@ When changing load-step timing, update:
 - tests in `tests/test_config.py`, `tests/test_load.py`, and `tests/test_animations.py`
 - this README
 - `PROJECT_CONTEXT.md`
-- regenerate `results/animations/06_rotor_reference_slip.gif`
 - regenerate `results/animations/06_rotor_reference_slip.mp4`
 
 ## Model Limitations
