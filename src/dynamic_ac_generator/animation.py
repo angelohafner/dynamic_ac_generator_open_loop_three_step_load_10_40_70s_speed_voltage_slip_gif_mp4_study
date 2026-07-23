@@ -1109,6 +1109,12 @@ def generate_rotor_reference_slip_animation(
         transform=rotor_axis.transAxes,
         va="top",
         fontsize=10,
+        bbox={
+            "facecolor": "white",
+            "alpha": 1.0,
+            "edgecolor": "none",
+            "boxstyle": "round,pad=0.25",
+        },
     )
     rotor_axis.set_theta_zero_location("E")
     rotor_axis.set_theta_direction(1)
@@ -1191,8 +1197,8 @@ def generate_rotor_reference_slip_animation(
     load_current_text = phasor_axis.text(0.0, 0.0, "I", fontsize=9)
     phasor_axis.set_theta_zero_location("E")
     phasor_axis.set_theta_direction(1)
-    phasor_axis.set_ylim(0.0, phasor_limit)
-    phasor_axis.set_rticks(np.linspace(0.0, phasor_limit, 4)[1:])
+    phasor_axis.set_ylim(0.0, max(phasor_limit, 1.5))
+    phasor_axis.set_rticks([0.5, 1.0, 1.5])
     phasor_axis.set_rlabel_position(135.0)
     phasor_axis.set_title("Terminal Phasors")
     _enable_grid(phasor_axis)
@@ -1295,7 +1301,7 @@ def generate_rotor_reference_slip_animation(
     ]
     for axis in chart_axes:
         _add_load_step_markers(axis, config)
-        axis.set_xlim(animation_time_s[0], animation_time_s[-1])
+        axis.set_xlim(0.0, config.SIMULATION_TIME_S)
     _fixed_legend(frequency_axis, "upper right")
     _fixed_legend(voltage_axis, "upper right")
     _fixed_legend(power_axis, "upper right")

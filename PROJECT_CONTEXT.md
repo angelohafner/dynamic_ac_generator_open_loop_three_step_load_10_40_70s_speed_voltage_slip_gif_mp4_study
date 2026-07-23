@@ -127,15 +127,16 @@ SLIP_ANIMATION_FRAME_COUNT = 1440
 SLIP_ANIMATION_FPS = 24
 ```
 
-Because the first load step is at `10 s`, the slip animation starts at `9 s`
-and ends at `100 s`. That covers 1 s before the first step and 90 s after it.
-The chart x-axis uses absolute simulation time, so the rendered load-change
+Because the first load step is at `10 s`, the slip animation frames start at
+`9 s` and end at `100 s`. That covers 1 s before the first step and 90 s after
+it. The chart x-axis uses absolute simulation time, so the rendered load-change
 markers appear at `10 s`, `40 s`, and `70 s`.
 
 Important timing distinction:
 
 ```text
-simulation time shown on chart = 9 s to 100 s
+animated frame time window     = 9 s to 100 s
+fixed time-chart x-axis        = 0 s to 100 s
 load steps shown on chart      = 10 s, 40 s, 70 s
 MP4 playback duration          = 60.125 s
 MP4 frame rate                 = 24 fps
@@ -173,7 +174,8 @@ Grid lines use 50 percent opacity. Auxiliary items such as load-step markers,
 current-time markers, full background curves, the reference circle, and the lag
 sector are intentionally hidden from legends. The left-column rotating-vector
 and terminal-phasor panels use Matplotlib polar projection; fasors use arrows
-instead of endpoint markers.
+instead of endpoint markers. The terminal phasor radial grid is fixed at `0.5`,
+`1.0`, and `1.5` pu, and the rotor lag text uses an opaque white background.
 
 ## Module Responsibilities
 
@@ -296,14 +298,17 @@ A new Codex session should:
    show `10 s`, `40 s`, and `70 s` for the load changes. Do not convert this
    figure to time relative to the first load step.
 8. Distinguish MP4 playback duration from physical simulation time: the current
-   video plays for about `60.125 s`, while the simulation shown by the axis goes
-   from `9 s` to `100 s`.
+   video plays for about `60.125 s`, while the time-chart x-axis is fixed from
+   `0 s` to `100 s`.
 9. Keep the load-resistance chart in the right-side time-series stack.
 10. Keep the six right-side time charts arranged as 3 rows by 2 columns.
 11. Keep the terminal phasor diagram directly below the rotating vectors.
 12. Keep both left-column vector panels on Matplotlib polar axes, with
     arrowhead fasors instead of endpoint dots.
-13. Do not reintroduce `results/animations/06_rotor_reference_slip.gif`; this
+13. Keep the terminal phasor radial grid fixed at `0.5`, `1.0`, and `1.5`.
+14. Keep the rotor lag `Lead` and `Full turns` text on an opaque white
+    background.
+15. Do not reintroduce `results/animations/06_rotor_reference_slip.gif`; this
     animation is intentionally MP4-only.
 
 When changing load-step timing, update:

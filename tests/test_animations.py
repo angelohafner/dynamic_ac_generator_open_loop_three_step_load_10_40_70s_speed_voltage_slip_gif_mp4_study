@@ -281,6 +281,28 @@ def test_rotor_reference_slip_uses_arrow_phasors_without_dot_markers() -> None:
     assert 'marker="o"' not in source
 
 
+def test_rotor_reference_slip_uses_clean_terminal_phasor_radial_ticks() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert "phasor_axis.set_rticks([0.5, 1.0, 1.5])" in source
+    assert "np.linspace(0.0, phasor_limit, 4)[1:]" not in source
+
+
+def test_rotor_reference_slip_lead_text_has_opaque_white_background() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert "bbox={" in source
+    assert '"facecolor": "white"' in source
+    assert '"alpha": 1.0' in source
+
+
+def test_rotor_reference_slip_time_charts_use_full_simulation_xlim() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert "axis.set_xlim(0.0, config.SIMULATION_TIME_S)" in source
+    assert "axis.set_xlim(animation_time_s[0], animation_time_s[-1])" not in source
+
+
 def test_rotor_reference_slip_renders_mp4_without_gif_export() -> None:
     source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
 

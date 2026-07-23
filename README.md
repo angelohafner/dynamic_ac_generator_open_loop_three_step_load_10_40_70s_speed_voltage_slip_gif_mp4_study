@@ -126,9 +126,9 @@ SLIP_ANIMATION_FRAME_COUNT = 1440
 SLIP_ANIMATION_FPS = 24
 ```
 
-Because the first load step occurs at `10 s`, the slow-motion animation starts
-at `9 s` and ends at `100 s`. That covers 1 s before the first step and 90 s
-after it.
+Because the first load step occurs at `10 s`, the slow-motion animation frames
+start at `9 s` and end at `100 s`. That covers 1 s before the first step and
+90 s after it.
 
 The chart x-axis uses absolute simulation time. Therefore the load-change
 markers appear at `10 s`, `40 s`, and `70 s` in the rendered MP4.
@@ -138,7 +138,8 @@ simulated time shown on the x-axis.
 Current timing convention:
 
 ```text
-simulated time window shown by the slip animation = 9 s to 100 s
+animated frame time window                         = 9 s to 100 s
+fixed time-chart x-axis                            = 0 s to 100 s
 load-step markers shown on the chart             = 10 s, 40 s, 70 s
 rendered video duration                          = 60.125 s
 rendered video frame rate                        = 24 fps
@@ -170,6 +171,9 @@ current-time markers, full background curves, the reference circle, and the lag
 sector are intentionally hidden from legends. The rotating-vector panel and the
 terminal phasor panel both use Matplotlib polar axes. The terminal phasors are
 drawn as arrows, not endpoint dots, so the arrowhead marks the fasor direction.
+The terminal phasor radial grid uses fixed circular ticks at `0.5`, `1.0`, and
+`1.5` pu. The rotor lag text uses an opaque white background so `Lead` and
+`Full turns` remain readable over the polar grid.
 
 ## Project Structure
 
@@ -393,7 +397,7 @@ This repository is intended to be self-contained. A new Codex session should:
    `results/animations/06_rotor_reference_slip.gif` output for this animation.
 8. Do not interpret the MP4 duration as simulated time. The video currently
    plays for about `60.125 s`, while the physical simulation axis shown in the
-   animation goes from `9 s` to `100 s`.
+   time charts is fixed from `0 s` to `100 s`.
 9. Keep the `06_rotor_reference_slip` x-axis in absolute simulation time. Do
    not subtract `SimulationConfig.LOAD_STEP_TIME_S` from the frame times for
    this figure; otherwise the load markers visually become `0 s`, `30 s`, and
@@ -404,6 +408,9 @@ This repository is intended to be self-contained. A new Codex session should:
     column.
 12. Keep both left-column vector panels on Matplotlib polar axes, and keep the
     six right-side time charts arranged as 3 rows by 2 columns.
+13. Keep the terminal phasor radial grid fixed at `0.5`, `1.0`, and `1.5`.
+14. Keep the rotor lag `Lead` and `Full turns` text on an opaque white
+    background.
 
 When changing load-step timing, update:
 
