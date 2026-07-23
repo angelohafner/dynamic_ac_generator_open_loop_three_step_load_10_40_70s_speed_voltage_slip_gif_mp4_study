@@ -34,7 +34,7 @@ The default load-impedance schedule is:
 ```text
 t = 0 s:    Z_load = 0.50 pu angle -45 deg
 t = 10 s:   Z_load = 0.80 pu angle -30 deg
-t = 40 s:   Z_load = 0.20 pu angle -60 deg
+t = 40 s:   Z_load = 0.60 pu angle -60 deg
 t = 70 s:   Z_load = 0.50 pu angle -45 deg
 t = 100 s:  end of simulation
 ```
@@ -43,8 +43,8 @@ Interpretation:
 
 - `0 s` to `10 s`: steady at 60 Hz.
 - After `10 s`: active electrical power drops and the rotor accelerates.
-- After `40 s`: the rotor keeps accelerating in this selected open-loop case.
-- After `70 s`: load impedance returns to the initial value, electrical power becomes larger than mechanical input at high speed, and the rotor decelerates toward 60 Hz.
+- After `40 s`: the lower-angle, moderate-magnitude impedance makes active electrical power larger than mechanical input at the reached speed, so the rotor decelerates.
+- After `70 s`: load impedance returns to the initial value; because the rotor is then below nominal speed, mechanical input exceeds electrical power and the rotor accelerates back toward 60 Hz.
 - By `100 s`: the frequency is close to the final theoretical open-loop equilibrium.
 
 The per-phase impedance magnitudes in ohms are obtained from
@@ -53,7 +53,7 @@ The per-phase impedance magnitudes in ohms are obtained from
 ```text
 0.50 pu angle -45 deg -> |Z| = 0.80 ohm
 0.80 pu angle -30 deg -> |Z| = 1.28 ohm
-0.20 pu angle -60 deg -> |Z| = 0.32 ohm
+0.60 pu angle -60 deg -> |Z| = 0.96 ohm
 0.50 pu angle -45 deg -> |Z| = 0.80 ohm
 ```
 
@@ -407,8 +407,8 @@ After the default run, the expected qualitative behavior is:
 
 - `0 s` to `10 s`: steady at 60 Hz
 - after `10 s`: frequency increases because active electrical power drops
-- after `40 s`: frequency continues increasing in this selected open-loop case
-- after `70 s`: frequency decreases toward 60 Hz because load impedance returns to the initial value
+- after `40 s`: frequency decreases because electrical power becomes larger than mechanical input
+- after `70 s`: frequency increases toward 60 Hz because load impedance returns to the initial value
 - by `100 s`: frequency is close to the final theoretical open-loop equilibrium
 
 ## Notes For Codex

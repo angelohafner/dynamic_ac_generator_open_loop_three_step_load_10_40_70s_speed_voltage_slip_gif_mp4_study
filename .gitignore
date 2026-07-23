@@ -2,6 +2,7 @@ __pycache__/
 .pytest_cache/
 *.py[cod]
 *.log
+results/diagnostics/
 .venv/
 venv/
 build/

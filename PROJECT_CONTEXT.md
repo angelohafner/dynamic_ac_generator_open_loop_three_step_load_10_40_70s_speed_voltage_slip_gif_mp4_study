@@ -35,19 +35,20 @@ Default load-impedance schedule:
 ```text
 t = 0 s:    Z_load = 0.50 pu angle -45 deg
 t = 10 s:   Z_load = 0.80 pu angle -30 deg
-t = 40 s:   Z_load = 0.20 pu angle -60 deg
+t = 40 s:   Z_load = 0.60 pu angle -60 deg
 t = 70 s:   Z_load = 0.50 pu angle -45 deg
 t = 100 s:  end of simulation
 ```
 
 The first impedance step reduces active electrical power and makes the rotor
-accelerate. The second impedance step keeps the selected open-loop case
-accelerating. The third load step restores the initial impedance; at the high
-speed reached by then, electrical power is larger than mechanical input, so the
-rotor decelerates and the final open-loop equilibrium returns to 60 Hz.
+accelerate. The second impedance step makes active electrical power larger than
+the constant mechanical input at the reached speed, so the rotor decelerates.
+The third load step restores the initial impedance; at the lower speed reached
+by then, mechanical input is larger than electrical power, so the rotor
+accelerates and the final open-loop equilibrium returns to 60 Hz.
 
 With `Z_base = V_LL^2 / S_base = 1.6 ohm`, the four per-phase impedance
-magnitudes are `0.80 ohm`, `1.28 ohm`, `0.32 ohm`, and `0.80 ohm`.
+magnitudes are `0.80 ohm`, `1.28 ohm`, `0.96 ohm`, and `0.80 ohm`.
 
 The accumulated rotor-reference angle does not have to return to zero when the
 frequency returns to 60 Hz. It is an integral of all previous frequency error,
@@ -301,8 +302,8 @@ The open-loop validation checks that:
 - field current remains constant without AVR
 - terminal voltage drops after the first impedance change
 - final frequency reaches the theoretical open-loop equilibrium
-- frequency increases after the second impedance change
-- frequency decreases after the third load restoration
+- frequency decreases after the second impedance change
+- frequency increases after the third load restoration
 - terminal phasors are drawn relative to `V_terminal = |V_terminal| angle 0 deg`
 - phase voltages are displaced by approximately 120 degrees
 - total instantaneous power varies smoothly for a balanced impedance load

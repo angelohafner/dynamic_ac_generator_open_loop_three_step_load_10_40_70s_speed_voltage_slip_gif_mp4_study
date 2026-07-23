@@ -178,9 +178,9 @@ def build_validation_report(
             [
                 {
                     "status": classify_check(
-                        second_step_frequency_change_hz > 0.01
+                        second_step_frequency_change_hz < -0.01
                     ),
-                    "check": "Frequency increases after the second impedance change",
+                    "check": "Frequency decreases after the second impedance change",
                     "value": second_step_frequency_change_hz,
                     "unit": "Hz change",
                 }
@@ -192,9 +192,9 @@ def build_validation_report(
             [
                 {
                     "status": classify_check(
-                        third_step_frequency_change_hz < -0.01
+                        third_step_frequency_change_hz > 0.01
                     ),
-                    "check": "Frequency decreases after the third load restoration",
+                    "check": "Frequency increases after the third load restoration",
                     "value": third_step_frequency_change_hz,
                     "unit": "Hz change",
                 }
