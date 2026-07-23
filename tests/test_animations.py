@@ -266,8 +266,9 @@ def test_rotor_reference_slip_time_charts_are_three_by_two() -> None:
     assert "voltage_axis = figure.add_subplot(time_grid[0, 1]" in source
     assert "power_axis = figure.add_subplot(time_grid[1, 0]" in source
     assert "internal_voltage_axis = figure.add_subplot(time_grid[1, 1]" in source
-    assert "impedance_axis = figure.add_subplot(time_grid[2, 0]" in source
-    assert "impedance_angle_axis = impedance_axis.twinx()" in source
+    assert "impedance_grid = time_grid[2, 0].subgridspec(2, 1" in source
+    assert "impedance_magnitude_axis = figure.add_subplot(impedance_grid[0, 0]" in source
+    assert "impedance_angle_axis = figure.add_subplot(impedance_grid[1, 0]" in source
     assert "lead_axis = figure.add_subplot(time_grid[2, 1]" in source
     assert "grid[2, 1:]" not in source
     assert "grid[3, 1:]" not in source
@@ -310,7 +311,7 @@ def test_rotor_reference_slip_renders_mp4_without_gif_export() -> None:
     assert "save_mp4=True" not in source
 
 
-def test_rotor_reference_slip_includes_load_impedance_panel_with_secondary_axis() -> None:
+def test_rotor_reference_slip_includes_load_impedance_panel_with_stacked_axes() -> None:
     source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
 
     assert "frame_load_impedance_magnitude_ohm" in source
@@ -318,7 +319,8 @@ def test_rotor_reference_slip_includes_load_impedance_panel_with_secondary_axis(
     assert "Load Impedance" in source
     assert '"|Z| (ohm)"' in source
     assert '"Angle (deg)"' in source
-    assert "impedance_angle_axis = impedance_axis.twinx()" in source
+    assert "impedance_angle_axis = impedance_axis.twinx()" not in source
+    assert "impedance_magnitude_axis" in source
     assert "results.load_impedance_magnitude_ohm" in source
     assert "results.load_impedance_angle_deg" in source
 

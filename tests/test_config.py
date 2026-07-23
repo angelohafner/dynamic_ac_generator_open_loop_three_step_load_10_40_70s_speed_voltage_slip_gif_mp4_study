@@ -14,12 +14,12 @@ def test_default_config_calculates_phase_impedances() -> None:
     assert math.isclose(config.phase_voltage_rms, 400.0 / math.sqrt(3.0), rel_tol=1e-12)
     assert math.isclose(abs(config.initial_impedance_ohm), 0.8, rel_tol=1e-12)
     assert math.isclose(math.degrees(math.atan2(config.initial_impedance_ohm.imag, config.initial_impedance_ohm.real)), -45.0, rel_tol=1e-12)
-    assert math.isclose(abs(config.first_step_impedance_ohm), 1.28, rel_tol=1e-12)
+    assert math.isclose(abs(config.first_step_impedance_ohm), 0.96, rel_tol=1e-12)
     assert math.isclose(abs(config.second_step_impedance_ohm), 0.96, rel_tol=1e-12)
     assert math.isclose(abs(config.final_impedance_ohm), abs(config.initial_impedance_ohm), rel_tol=1e-12)
     assert config.load_schedule == (
         (0.0, 0.5, -45.0),
-        (10.0, 0.8, -30.0),
+        (10.0, 0.6, -30.0),
         (40.0, 0.6, -60.0),
         (70.0, 0.5, -45.0),
     )

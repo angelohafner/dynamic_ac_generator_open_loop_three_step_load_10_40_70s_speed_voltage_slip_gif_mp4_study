@@ -34,7 +34,7 @@ Default load-impedance schedule:
 
 ```text
 t = 0 s:    Z_load = 0.50 pu angle -45 deg
-t = 10 s:   Z_load = 0.80 pu angle -30 deg
+t = 10 s:   Z_load = 0.60 pu angle -30 deg
 t = 40 s:   Z_load = 0.60 pu angle -60 deg
 t = 70 s:   Z_load = 0.50 pu angle -45 deg
 t = 100 s:  end of simulation
@@ -48,7 +48,10 @@ by then, mechanical input is larger than electrical power, so the rotor
 accelerates and the final open-loop equilibrium returns to 60 Hz.
 
 With `Z_base = V_LL^2 / S_base = 1.6 ohm`, the four per-phase impedance
-magnitudes are `0.80 ohm`, `1.28 ohm`, `0.96 ohm`, and `0.80 ohm`.
+magnitudes are `0.80 ohm`, `0.96 ohm`, `0.96 ohm`, and `0.80 ohm`.
+The rectangular values are approximately `0.5657 - j0.5657 ohm`,
+`0.8314 - j0.4800 ohm`, `0.4800 - j0.8314 ohm`, and
+`0.5657 - j0.5657 ohm`.
 
 The accumulated rotor-reference angle does not have to return to zero when the
 frequency returns to 60 Hz. It is an integral of all previous frequency error,
@@ -193,9 +196,9 @@ instead of endpoint markers. The terminal phasor radial grid is fixed at `0.5`,
 `1.0`, and `1.5` pu. The terminal phasor diagram uses terminal voltage as the
 angular reference, so `V_terminal` is drawn at `0 deg`; `I_load` is drawn at
 `-phi_load`, and `E_internal` is drawn relative to that terminal-voltage
-reference. The load-impedance panel uses a secondary y-axis: `|Z|` in ohms on
-the left axis and impedance angle in degrees on the right axis. The rotor lag
-text uses an opaque white background.
+reference. The load-impedance panel is split into two stacked subplots sharing
+absolute simulation time: `|Z|` in ohms on top and impedance angle in degrees
+below. The rotor lag text uses an opaque white background.
 
 ## Module Responsibilities
 
@@ -326,8 +329,9 @@ A new Codex session should:
 8. Distinguish MP4 playback duration from physical simulation time: the current
    video plays for about `60.125 s`, while the time-chart x-axis is fixed from
    `0 s` to `100 s`.
-9. Keep the load-impedance chart in the right-side time-series stack, with
-   `|Z|` on the left y-axis and impedance angle in degrees on the right y-axis.
+9. Keep the load-impedance chart in the right-side time-series stack, split
+   into two stacked subplots sharing the same time axis: `|Z|` on top and
+   impedance angle below.
 10. Keep the six right-side time charts arranged as 3 rows by 2 columns.
 11. Keep the terminal phasor diagram directly below the rotating vectors.
 12. Keep both left-column vector panels on Matplotlib polar axes, with

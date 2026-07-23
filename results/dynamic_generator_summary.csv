@@ -1,31 +1,31 @@
 metric,value,unit
 Nominal frequency,60.0,Hz
 Damping coefficient,0.0,pu
-Minimum frequency,52.04568645321367,Hz
-Maximum frequency,76.89199429069524,Hz
-Final frequency,59.99999385478164,Hz
+Minimum frequency,52.04568611811702,Hz
+Maximum frequency,70.98631951176702,Hz
+Final frequency,59.99999385478141,Hz
 Theoretical final frequency,60.0,Hz
 Open-loop frequency time constant,2.1213203435596433,s
 Approximate open-loop settling time,75.8694001309754,s
-Maximum frequency deviation,16.891994290695237,Hz
+Maximum frequency deviation,10.986319511767022,Hz
 Time of minimum frequency,70.0,s
 Initial electrical power,1.4142135623730947,pu
-Final electrical power,1.4142132726847385,pu
+Final electrical power,1.4142132726847267,pu
 Initial mechanical power,1.4142135623730947,pu
 Final mechanical power,1.4142135623730947,pu
 Initial field current,1.0,pu
 Final field current,1.0,pu
 Initial internal voltage,320.98722220595107,V LL RMS
-Final internal voltage,320.98718933034155,V LL RMS
+Final internal voltage,320.98718933034024,V LL RMS
 Initial terminal voltage,400.0,V LL RMS
-Final terminal voltage,399.9999590318776,V LL RMS
+Final terminal voltage,399.9999590318761,V LL RMS
 Initial load current,288.67513459481285,A phase RMS
-Final load current,288.6751050286173,A phase RMS
+Final load current,288.6751050286161,A phase RMS
 Initial reactive power,-1.4142135623730947,pu
-Final reactive power,-1.4142132726847385,pu
+Final reactive power,-1.4142132726847267,pu
 Initial load impedance magnitude,0.8000000000000002,ohm
 Initial load impedance angle,-45.0,deg
 Final load impedance magnitude,0.8000000000000002,ohm
 Final load impedance angle,-45.0,deg
 Settling time,76.007,s
-Steady-state frequency error,6.14521835728965e-06,Hz
+Steady-state frequency error,6.145218591768753e-06,Hz

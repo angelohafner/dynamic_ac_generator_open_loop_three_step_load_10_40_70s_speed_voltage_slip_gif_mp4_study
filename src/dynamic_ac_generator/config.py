@@ -34,7 +34,7 @@ class SimulationConfig:
 
     INITIAL_LOAD_PU: float = 0.50
     INITIAL_LOAD_ANGLE_DEG: float = -45.0
-    FINAL_LOAD_PU: float = 0.80
+    FINAL_LOAD_PU: float = 0.60
     FINAL_LOAD_ANGLE_DEG: float = -30.0
     SECOND_LOAD_STEP_TIME_S: float | None = 40.0
     SECOND_STEP_LOAD_PU: float | None = 0.60

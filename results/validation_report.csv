@@ -1,14 +1,14 @@
 status,check,value,unit
 PASS,Initial frequency is approximately 60 Hz,0.0,Hz error
 PASS,Initial mechanical and electrical powers are equal,0.0,pu error
-PASS,Frequency initially increases after the first impedance change,1.0748964902589435,Hz change
+PASS,Frequency initially increases after the first impedance change,0.7810316629383962,Hz change
 PASS,Mechanical power remains constant without a speed regulator,0.0,pu change
 PASS,Initial terminal voltage is nominal in open-loop excitation,0.0,V LL RMS error
 PASS,Field current remains constant in open-loop excitation,0.0,pu change
-PASS,Terminal voltage drops after the first impedance change,43.2158153685852,V LL RMS drop
-PASS,Final frequency reaches the theoretical open-loop equilibrium,6.14521835728965e-06,Hz error
-PASS,Frequency decreases after the second impedance change,-3.0937254239036065,Hz change
-PASS,Frequency increases after the third load restoration,0.672242863690478,Hz change
-PASS,Three phase voltages are displaced by approximately 120 degrees,0.6733351407849426,degree error
-PASS,Total instantaneous power varies smoothly for a balanced impedance load,0.006247279610029779,relative standard deviation
-PASS,Energy and power signs are consistent immediately after the disturbance,0.09165801143304056,pu/s speed derivative
+PASS,Terminal voltage drops after the first impedance change,65.31738518443979,V LL RMS drop
+PASS,Final frequency reaches the theoretical open-loop equilibrium,6.145218591768753e-06,Hz error
+PASS,Frequency decreases after the second impedance change,-2.263271012935334,Hz change
+PASS,Frequency increases after the third load restoration,0.6722428901698976,Hz change
+PASS,Three phase voltages are displaced by approximately 120 degrees,0.7803632444060327,degree error
+PASS,Total instantaneous power varies smoothly for a balanced impedance load,0.004554889528844829,relative standard deviation
+PASS,Energy and power signs are consistent immediately after the disturbance,0.06686020863286833,pu/s speed derivative

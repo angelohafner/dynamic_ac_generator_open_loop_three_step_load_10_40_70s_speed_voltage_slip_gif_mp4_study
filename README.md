@@ -33,7 +33,7 @@ The default load-impedance schedule is:
 
 ```text
 t = 0 s:    Z_load = 0.50 pu angle -45 deg
-t = 10 s:   Z_load = 0.80 pu angle -30 deg
+t = 10 s:   Z_load = 0.60 pu angle -30 deg
 t = 40 s:   Z_load = 0.60 pu angle -60 deg
 t = 70 s:   Z_load = 0.50 pu angle -45 deg
 t = 100 s:  end of simulation
@@ -47,14 +47,14 @@ Interpretation:
 - After `70 s`: load impedance returns to the initial value; because the rotor is then below nominal speed, mechanical input exceeds electrical power and the rotor accelerates back toward 60 Hz.
 - By `100 s`: the frequency is close to the final theoretical open-loop equilibrium.
 
-The per-phase impedance magnitudes in ohms are obtained from
+The per-phase impedance values in ohms are obtained from
 `Z_base = V_LL^2 / S_base = 1.6 ohm`:
 
 ```text
-0.50 pu angle -45 deg -> |Z| = 0.80 ohm
-0.80 pu angle -30 deg -> |Z| = 1.28 ohm
-0.60 pu angle -60 deg -> |Z| = 0.96 ohm
-0.50 pu angle -45 deg -> |Z| = 0.80 ohm
+0.50 pu angle -45 deg -> 0.80 ohm angle -45 deg -> 0.5657 - j0.5657 ohm
+0.60 pu angle -30 deg -> 0.96 ohm angle -30 deg -> 0.8314 - j0.4800 ohm
+0.60 pu angle -60 deg -> 0.96 ohm angle -60 deg -> 0.4800 - j0.8314 ohm
+0.50 pu angle -45 deg -> 0.80 ohm angle -45 deg -> 0.5657 - j0.5657 ohm
 ```
 
 The accumulated rotor-reference angle does not necessarily return to zero when
@@ -175,9 +175,11 @@ The synchronized `06_rotor_reference_slip` animation contains:
 - a polar slow-motion reference vector and rotor vector
 - a polar terminal phasor diagram below the rotating vectors
 - a shaded rotor-reference lag sector
-- six time-domain charts arranged as 3 rows by 2 columns:
+- six time-domain chart groups arranged as 3 rows by 2 columns:
   frequency, terminal voltage, mechanical/electrical power, internal voltage,
-  load impedance magnitude/angle, and accumulated reference lead
+  load impedance, and accumulated reference lead
+- the load-impedance chart group is split into two stacked subplots sharing
+  the same time axis: `|Z|` on top and impedance angle below
 
 The shaded sector starts at 20 percent opacity and becomes more opaque as the
 absolute accumulated lead or lag grows:
@@ -433,8 +435,9 @@ This repository is intended to be self-contained. A new Codex session should:
    this figure; otherwise the load markers visually become `0 s`, `30 s`, and
    `60 s` even though the simulation is configured for `10 s`, `40 s`, and
    `70 s`.
-10. Keep the load-impedance panel on the absolute simulation-time axis, with
-    `|Z|` on the left y-axis and impedance angle in degrees on the right y-axis.
+10. Keep the load-impedance panel on the absolute simulation-time axis, split
+    into two stacked subplots sharing time: `|Z|` on top and impedance angle
+    below.
 11. Keep the terminal phasor diagram below the rotating vectors in the left
     column.
 12. Keep both left-column vector panels on Matplotlib polar axes, and keep the

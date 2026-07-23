@@ -118,9 +118,13 @@ def generate_all_figures(
         )
     )
 
-    figure, impedance_axis = plt.subplots(figsize=(9.0, 4.5))
-    impedance_angle_axis = impedance_axis.twinx()
-    magnitude_line, = impedance_axis.plot(
+    figure, (impedance_magnitude_axis, impedance_angle_axis) = plt.subplots(
+        2,
+        1,
+        figsize=(9.0, 6.2),
+        sharex=True,
+    )
+    magnitude_line, = impedance_magnitude_axis.plot(
         results.time_s,
         results.load_impedance_magnitude_ohm,
         label="|Z|",
@@ -132,13 +136,17 @@ def generate_all_figures(
         label="Angle",
     )
     for step_index, step_time_s in enumerate(config.load_step_times_s, start=1):
-        impedance_axis.axvline(step_time_s, linestyle="--", label=f"_Load step {step_index}")
-    impedance_axis.set_title("Load Impedance Versus Time")
-    impedance_axis.set_xlabel("Time (s)")
-    impedance_axis.set_ylabel("|Z| (ohm)")
+        for axis in (impedance_magnitude_axis, impedance_angle_axis):
+            axis.axvline(step_time_s, linestyle="--", label=f"_Load step {step_index}")
+    impedance_magnitude_axis.set_title("Load Impedance Magnitude Versus Time")
+    impedance_angle_axis.set_title("Load Impedance Angle Versus Time")
+    impedance_angle_axis.set_xlabel("Time (s)")
+    impedance_magnitude_axis.set_ylabel("|Z| (ohm)")
     impedance_angle_axis.set_ylabel("Angle (deg)")
-    impedance_axis.grid(True, alpha=0.5)
-    impedance_axis.legend(handles=[magnitude_line, angle_line], loc="upper right")
+    for axis in (impedance_magnitude_axis, impedance_angle_axis):
+        axis.grid(True, alpha=0.5)
+    impedance_magnitude_axis.legend(handles=[magnitude_line], loc="upper right")
+    impedance_angle_axis.legend(handles=[angle_line], loc="upper right")
     figure_paths.append(_save_current_figure(output_dir, "04_load_impedance.png"))
 
     plt.figure(figsize=(9.0, 4.5))

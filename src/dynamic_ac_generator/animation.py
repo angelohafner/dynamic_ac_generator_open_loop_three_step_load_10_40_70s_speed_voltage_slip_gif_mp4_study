@@ -1073,8 +1073,9 @@ def generate_rotor_reference_slip_animation(
     voltage_axis = figure.add_subplot(time_grid[0, 1], sharex=frequency_axis)
     power_axis = figure.add_subplot(time_grid[1, 0], sharex=frequency_axis)
     internal_voltage_axis = figure.add_subplot(time_grid[1, 1], sharex=frequency_axis)
-    impedance_axis = figure.add_subplot(time_grid[2, 0], sharex=frequency_axis)
-    impedance_angle_axis = impedance_axis.twinx()
+    impedance_grid = time_grid[2, 0].subgridspec(2, 1, hspace=0.18)
+    impedance_magnitude_axis = figure.add_subplot(impedance_grid[0, 0], sharex=frequency_axis)
+    impedance_angle_axis = figure.add_subplot(impedance_grid[1, 0], sharex=frequency_axis)
     lead_axis = figure.add_subplot(time_grid[2, 1], sharex=frequency_axis)
 
     angle = np.linspace(0.0, 2.0 * math.pi, 400, dtype=float)
@@ -1287,7 +1288,7 @@ def generate_rotor_reference_slip_animation(
     _enable_grid(internal_voltage_axis)
     _fixed_legend(internal_voltage_axis, "upper right")
 
-    impedance_axis.plot(
+    impedance_magnitude_axis.plot(
         animation_time_s,
         frame_load_impedance_magnitude_ohm,
         alpha=0.25,
@@ -1300,18 +1301,19 @@ def generate_rotor_reference_slip_animation(
         color="tab:purple",
         label="_Full load impedance angle",
     )
-    impedance_magnitude_line, = impedance_axis.plot([], [], label="|Z|")
+    impedance_magnitude_line, = impedance_magnitude_axis.plot([], [], label="|Z|")
     impedance_angle_line, = impedance_angle_axis.plot(
         [],
         [],
         color="tab:purple",
         label="Angle",
     )
-    impedance_axis.set_title("Load Impedance")
-    impedance_axis.set_ylabel("|Z| (ohm)")
-    impedance_angle_axis.set_ylabel("Angle (deg)", labelpad=2.0)
-    _enable_grid(impedance_axis)
-    _fixed_legend(impedance_axis, "upper left")
+    impedance_magnitude_axis.set_title("Load Impedance")
+    impedance_magnitude_axis.set_ylabel("|Z| (ohm)")
+    impedance_angle_axis.set_ylabel("Angle (deg)")
+    _enable_grid(impedance_magnitude_axis)
+    _enable_grid(impedance_angle_axis)
+    _fixed_legend(impedance_magnitude_axis, "upper left")
     _fixed_legend(impedance_angle_axis, "upper right")
 
     lead_axis.plot(
@@ -1333,7 +1335,8 @@ def generate_rotor_reference_slip_animation(
         voltage_axis,
         power_axis,
         internal_voltage_axis,
-        impedance_axis,
+        impedance_magnitude_axis,
+        impedance_angle_axis,
         lead_axis,
     ]
     current_markers = [
@@ -1362,7 +1365,7 @@ def generate_rotor_reference_slip_animation(
         )
     )
     internal_voltage_axis.set_ylim(*_axis_limits(frame_internal_voltage_v))
-    impedance_axis.set_ylim(*_axis_limits(frame_load_impedance_magnitude_ohm))
+    impedance_magnitude_axis.set_ylim(*_axis_limits(frame_load_impedance_magnitude_ohm))
     impedance_angle_axis.set_ylim(*_axis_limits(frame_load_impedance_angle_deg))
     lead_axis.set_ylim(*_axis_limits(lead_cycles))
 
