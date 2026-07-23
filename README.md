@@ -132,6 +132,22 @@ after it.
 
 The chart x-axis uses absolute simulation time. Therefore the load-change
 markers appear at `10 s`, `40 s`, and `70 s` in the rendered GIF and MP4.
+This is intentional: the MP4 playback length is not the same quantity as the
+simulated time shown on the x-axis.
+
+Current timing convention:
+
+```text
+simulated time window shown by the slip animation = 9 s to 100 s
+load-step markers shown on the chart             = 10 s, 40 s, 70 s
+rendered video duration                          = 60.125 s
+rendered video frame rate                        = 24 fps
+rendered frame count                             = 1443 frames
+```
+
+The video duration is `frame_count / fps`. It only controls how slowly the
+viewer sees the transient. The chart axis and the numerical results remain in
+physical simulation seconds.
 
 The synchronized `06_rotor_reference_slip` animation contains:
 
@@ -194,6 +210,16 @@ $\sin(\theta)$
     `-- *.csv
 ```
 
+The `tools/` folder contains small maintenance utilities. The most important
+one for the current generated artifacts is:
+
+```text
+tools/regenerate_slip_animation.py
+```
+
+It regenerates only `results/animations/06_rotor_reference_slip.gif` and
+`results/animations/06_rotor_reference_slip.mp4`.
+
 ## Module Responsibilities
 
 - `config.py`: editable parameters, load schedule, base quantities, and validation
@@ -251,6 +277,12 @@ Run with a custom damping coefficient:
 
 ```powershell
 python scripts/run_simulation.py --damping 2.0 --simulation-time 100
+```
+
+Regenerate only the corrected rotor-reference slip GIF and MP4:
+
+```powershell
+python tools/regenerate_slip_animation.py
 ```
 
 ## Outputs
@@ -356,9 +388,19 @@ This repository is intended to be self-contained. A new Codex session should:
 3. Inspect `src/dynamic_ac_generator/config.py` before changing scenario values.
 4. Use `pytest` for regression checks.
 5. Use `python scripts/run_simulation.py` to regenerate all outputs.
-6. Remember that `results/animations/06_rotor_reference_slip.gif` and
+6. Use `python tools/regenerate_slip_animation.py` when only the long
+   rotor-reference slip GIF and MP4 need to be rebuilt.
+7. Remember that `results/animations/06_rotor_reference_slip.gif` and
    `results/animations/06_rotor_reference_slip.mp4` are generated from the same
    Matplotlib animation object.
+8. Do not interpret the MP4 duration as simulated time. The video currently
+   plays for about `60.125 s`, while the physical simulation axis shown in the
+   animation goes from `9 s` to `100 s`.
+9. Keep the `06_rotor_reference_slip` x-axis in absolute simulation time. Do
+   not subtract `SimulationConfig.LOAD_STEP_TIME_S` from the frame times for
+   this figure; otherwise the load markers visually become `0 s`, `30 s`, and
+   `60 s` even though the simulation is configured for `10 s`, `40 s`, and
+   `70 s`.
 
 When changing load-step timing, update:
 
@@ -370,6 +412,8 @@ When changing load-step timing, update:
 - tests in `tests/test_config.py`, `tests/test_load.py`, and `tests/test_animations.py`
 - this README
 - `PROJECT_CONTEXT.md`
+- regenerate `results/animations/06_rotor_reference_slip.gif`
+- regenerate `results/animations/06_rotor_reference_slip.mp4`
 
 ## Model Limitations
 

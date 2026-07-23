@@ -132,6 +132,19 @@ and ends at `100 s`. That covers 1 s before the first step and 90 s after it.
 The chart x-axis uses absolute simulation time, so the rendered load-change
 markers appear at `10 s`, `40 s`, and `70 s`.
 
+Important timing distinction:
+
+```text
+simulation time shown on chart = 9 s to 100 s
+load steps shown on chart      = 10 s, 40 s, 70 s
+MP4 playback duration          = 60.125 s
+MP4 frame rate                 = 24 fps
+MP4 frame count                = 1443 frames
+```
+
+The MP4 duration is only the viewing duration of the rendered animation. It is
+not the simulated physical time.
+
 The `06_rotor_reference_slip` animation is a synchronized multi-panel figure:
 
 ```text
@@ -191,6 +204,12 @@ Optional PI speed-governed case:
 
 ```powershell
 python scripts/run_simulation.py --control-mode pi
+```
+
+Regenerate only the corrected `06_rotor_reference_slip` GIF and MP4:
+
+```powershell
+python tools/regenerate_slip_animation.py
 ```
 
 ## Outputs
@@ -262,6 +281,14 @@ A new Codex session should:
 3. Inspect `src/dynamic_ac_generator/config.py` before changing scenario values.
 4. Use `pytest` for regression checks.
 5. Use `python scripts/run_simulation.py` to regenerate outputs.
+6. Use `python tools/regenerate_slip_animation.py` when only the long slip GIF
+   and MP4 need to be rebuilt.
+7. Keep `06_rotor_reference_slip` on absolute simulation time. The x-axis must
+   show `10 s`, `40 s`, and `70 s` for the load changes. Do not convert this
+   figure to time relative to the first load step.
+8. Distinguish MP4 playback duration from physical simulation time: the current
+   video plays for about `60.125 s`, while the simulation shown by the axis goes
+   from `9 s` to `100 s`.
 
 When changing load-step timing, update:
 
@@ -273,6 +300,8 @@ When changing load-step timing, update:
 - tests in `tests/test_config.py`, `tests/test_load.py`, and `tests/test_animations.py`
 - `README.md`
 - `PROJECT_CONTEXT.md`
+- regenerate `results/animations/06_rotor_reference_slip.gif`
+- regenerate `results/animations/06_rotor_reference_slip.mp4`
 
 ## Known Limitations
 
