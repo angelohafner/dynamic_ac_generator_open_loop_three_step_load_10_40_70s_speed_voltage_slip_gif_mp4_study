@@ -44,7 +44,7 @@ def build_validation_report(
 
     initial_frequency_error_hz = abs(float(frequency_hz[0] - results.config.F_NOM_HZ))
     initial_power_error_pu = abs(float(results.mechanical_power_pu[0] - results.electrical_power_pu[0]))
-    frequency_drop_hz = float(frequency_hz[after_step_index] - frequency_hz[step_index])
+    first_step_frequency_change_hz = float(frequency_hz[after_step_index] - frequency_hz[step_index])
     mechanical_power_increase_pu = float(results.mechanical_power_pu[-1] - results.mechanical_power_pu[0])
     mechanical_power_change_pu = abs(mechanical_power_increase_pu)
     mechanical_power_response_span_pu = float(
@@ -77,7 +77,10 @@ def build_validation_report(
         (results.omega_pu[sign_index + 1] - results.omega_pu[sign_index - 1])
         / (results.time_s[sign_index + 1] - results.time_s[sign_index - 1])
     )
-    sign_consistent = power_imbalance_pu < 0.0 and measured_speed_derivative_pu_per_s < 0.0
+    sign_consistent = (
+        abs(power_imbalance_pu) > 1e-9
+        and power_imbalance_pu * measured_speed_derivative_pu_per_s > 0.0
+    )
     second_step_frequency_change_hz = math.nan
     if results.config.CONTROL_MODE == "unregulated" and len(results.config.load_step_times_s) > 1:
         second_step_time_s = results.config.load_step_times_s[1]
@@ -146,9 +149,9 @@ def build_validation_report(
             "unit": "pu error",
         },
         {
-            "status": classify_check(frequency_drop_hz < -0.01),
-            "check": "Frequency initially decreases after the load increase",
-            "value": frequency_drop_hz,
+            "status": classify_check(first_step_frequency_change_hz > 0.01),
+            "check": "Frequency initially increases after the first impedance change",
+            "value": first_step_frequency_change_hz,
             "unit": "Hz change",
         },
         mechanical_power_row,
@@ -166,7 +169,7 @@ def build_validation_report(
         },
         {
             "status": classify_check(terminal_voltage_drop_v > 1.0),
-            "check": "Terminal voltage drops after the load increase",
+            "check": "Terminal voltage drops after the first impedance change",
             "value": terminal_voltage_drop_v,
             "unit": "V LL RMS drop",
         },
@@ -177,7 +180,7 @@ def build_validation_report(
                     "status": classify_check(
                         second_step_frequency_change_hz > 0.01
                     ),
-                    "check": "Frequency increases after the second load reduction",
+                    "check": "Frequency increases after the second impedance change",
                     "value": second_step_frequency_change_hz,
                     "unit": "Hz change",
                 }
@@ -210,7 +213,7 @@ def build_validation_report(
                 relative_power_std <= 1e-2,
                 warning_condition=relative_power_std <= 2e-2,
             ),
-            "check": "Total instantaneous power varies smoothly for a balanced resistive load",
+            "check": "Total instantaneous power varies smoothly for a balanced impedance load",
             "value": relative_power_std,
             "unit": "relative standard deviation",
         },

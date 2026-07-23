@@ -39,9 +39,9 @@ class GeneratorModel:
         mechanical_power_pu = float(state[2])
         field_current_pu = float(state[4])
 
-        load_resistance_ohm = float(self.load.resistance_at(time_s))
+        load_impedance_ohm = complex(self.load.impedance_at(time_s))
         terminal_quantities = self.electrical_model.solve_terminal_quantities(
-            load_resistance_ohm,
+            load_impedance_ohm,
             field_current_pu,
             omega_pu,
         )
@@ -105,8 +105,23 @@ class GeneratorModel:
         voltage_c_v: FloatArray,
         resistance_ohm: FloatArray,
     ) -> tuple[FloatArray, FloatArray, FloatArray]:
-        """Calculate phase currents for a balanced resistive load."""
+        """Calculate in-phase currents for backward-compatible resistive-only callers."""
         current_a_a = voltage_a_v / resistance_ohm
         current_b_a = voltage_b_v / resistance_ohm
         current_c_a = voltage_c_v / resistance_ohm
+        return current_a_a, current_b_a, current_c_a
+
+    def three_phase_currents(
+        self,
+        theta_rad: FloatArray,
+        current_phase_rms: FloatArray,
+        current_angle_rad: FloatArray,
+    ) -> tuple[FloatArray, FloatArray, FloatArray]:
+        """Generate balanced phase currents from the current phasor angle."""
+        theta_wrapped_rad = np.mod(theta_rad + math.pi, 2.0 * math.pi) - math.pi
+        current_peak = math.sqrt(2.0) * np.asarray(current_phase_rms, dtype=float)
+        active_current_angle_rad = np.asarray(current_angle_rad, dtype=float)
+        current_a_a = current_peak * np.sin(theta_wrapped_rad + active_current_angle_rad)
+        current_b_a = current_peak * np.sin(theta_wrapped_rad + active_current_angle_rad - 2.0 * math.pi / 3.0)
+        current_c_a = current_peak * np.sin(theta_wrapped_rad + active_current_angle_rad + 2.0 * math.pi / 3.0)
         return current_a_a, current_b_a, current_c_a

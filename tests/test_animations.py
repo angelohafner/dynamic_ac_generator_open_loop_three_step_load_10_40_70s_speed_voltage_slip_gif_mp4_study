@@ -266,7 +266,8 @@ def test_rotor_reference_slip_time_charts_are_three_by_two() -> None:
     assert "voltage_axis = figure.add_subplot(time_grid[0, 1]" in source
     assert "power_axis = figure.add_subplot(time_grid[1, 0]" in source
     assert "internal_voltage_axis = figure.add_subplot(time_grid[1, 1]" in source
-    assert "resistance_axis = figure.add_subplot(time_grid[2, 0]" in source
+    assert "impedance_axis = figure.add_subplot(time_grid[2, 0]" in source
+    assert "impedance_angle_axis = impedance_axis.twinx()" in source
     assert "lead_axis = figure.add_subplot(time_grid[2, 1]" in source
     assert "grid[2, 1:]" not in source
     assert "grid[3, 1:]" not in source
@@ -309,13 +310,17 @@ def test_rotor_reference_slip_renders_mp4_without_gif_export() -> None:
     assert "save_mp4=True" not in source
 
 
-def test_rotor_reference_slip_includes_load_resistance_panel() -> None:
+def test_rotor_reference_slip_includes_load_impedance_panel_with_secondary_axis() -> None:
     source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
 
-    assert "frame_load_resistance_ohm" in source
-    assert "Load Resistance" in source
-    assert "Resistance (ohm)" in source
-    assert "results.load_resistance_ohm" in source
+    assert "frame_load_impedance_magnitude_ohm" in source
+    assert "frame_load_impedance_angle_deg" in source
+    assert "Load Impedance" in source
+    assert '"|Z| (ohm)"' in source
+    assert '"Angle (deg)"' in source
+    assert "impedance_angle_axis = impedance_axis.twinx()" in source
+    assert "results.load_impedance_magnitude_ohm" in source
+    assert "results.load_impedance_angle_deg" in source
 
 
 def test_rotor_reference_slip_includes_phasor_panel_below_rotor() -> None:
@@ -332,12 +337,12 @@ def test_terminal_phasors_use_terminal_voltage_as_angle_reference() -> None:
     assert hasattr(animation, "calculate_terminal_reference_phasor_angles")
 
     internal_angle_rad, terminal_angle_rad, load_current_angle_rad = (
-        animation.calculate_terminal_reference_phasor_angles(-0.35)
+        animation.calculate_terminal_reference_phasor_angles(-0.35, np.deg2rad(-45.0))
     )
 
     assert np.isclose(internal_angle_rad, 0.35)
     assert np.isclose(terminal_angle_rad, 0.0)
-    assert np.isclose(load_current_angle_rad, 0.0)
+    assert np.isclose(load_current_angle_rad, np.deg2rad(45.0))
 
 
 def test_rotor_reference_slip_uses_absolute_simulation_time_axis() -> None:

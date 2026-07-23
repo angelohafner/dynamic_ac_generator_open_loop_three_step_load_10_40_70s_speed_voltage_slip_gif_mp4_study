@@ -270,12 +270,13 @@ def calculate_lag_sector_alpha(
 
 def calculate_terminal_reference_phasor_angles(
     terminal_voltage_angle_rad: float,
+    load_impedance_angle_rad: float,
 ) -> tuple[float, float, float]:
     """Return internal-voltage, terminal-voltage, and load-current angles relative to Vt."""
     terminal_reference_angle_rad = float(terminal_voltage_angle_rad)
     internal_voltage_angle_rad = -terminal_reference_angle_rad
     terminal_voltage_angle_rad = 0.0
-    load_current_angle_rad = 0.0
+    load_current_angle_rad = -float(load_impedance_angle_rad)
     return internal_voltage_angle_rad, terminal_voltage_angle_rad, load_current_angle_rad
 
 
@@ -361,7 +362,7 @@ def generate_frequency_power_animation(
     output_dir: Path,
     frame_times_s: FloatArray | None = None,
 ) -> Path:
-    """Animate frequency, power balance, and load resistance through time."""
+    """Animate frequency, power balance, and load impedance magnitude through time."""
     config = results.config
     is_pi_controlled = config.CONTROL_MODE == "pi"
     animation_title = (
@@ -395,10 +396,14 @@ def generate_frequency_power_animation(
         results.time_s,
         active_frame_times_s,
     )
-    frame_resistance_ohm = _interpolate(results.load_resistance_ohm, results.time_s, active_frame_times_s)
+    frame_impedance_magnitude_ohm = _interpolate(
+        results.load_impedance_magnitude_ohm,
+        results.time_s,
+        active_frame_times_s,
+    )
 
     figure, axes = plt.subplots(3, 1, figsize=(9.5, 7.0), sharex=True)
-    frequency_axis, power_axis, resistance_axis = axes
+    frequency_axis, power_axis, impedance_axis = axes
 
     frequency_axis.plot(results.time_s, results.frequency_hz, alpha=0.25, label="_Full frequency")
     power_axis.plot(results.time_s, results.mechanical_power_pu, alpha=0.25, label="_Full mechanical power")
@@ -409,17 +414,22 @@ def generate_frequency_power_animation(
         alpha=0.25,
         label=faded_reference_label,
     )
-    resistance_axis.plot(results.time_s, results.load_resistance_ohm, alpha=0.25, label="_Full resistance")
+    impedance_axis.plot(
+        results.time_s,
+        results.load_impedance_magnitude_ohm,
+        alpha=0.25,
+        label="_Full impedance magnitude",
+    )
 
     active_frequency_line, = frequency_axis.plot([], [], label="Animated frequency")
     active_mechanical_line, = power_axis.plot([], [], label="Mechanical power")
     active_electrical_line, = power_axis.plot([], [], label="Electrical power")
     active_reference_line, = power_axis.plot([], [], label=reference_label)
-    active_resistance_line, = resistance_axis.plot([], [], label="Load resistance")
+    active_impedance_line, = impedance_axis.plot([], [], label="Load |Z|")
 
     frequency_marker = frequency_axis.axvline(0.0, linestyle="--", label="_Current time")
     power_marker = power_axis.axvline(0.0, linestyle="--", label="_Current time")
-    resistance_marker = resistance_axis.axvline(0.0, linestyle="--", label="_Current time")
+    impedance_marker = impedance_axis.axvline(0.0, linestyle="--", label="_Current time")
 
     frequency_axis.axhline(config.F_NOM_HZ, linestyle="--", label="Nominal frequency")
     for axis in axes:
@@ -427,12 +437,12 @@ def generate_frequency_power_animation(
         _enable_grid(axis)
     _fixed_legend(frequency_axis, "upper right")
     _fixed_legend(power_axis, "upper right")
-    _fixed_legend(resistance_axis, "upper right")
+    _fixed_legend(impedance_axis, "upper right")
 
     frequency_axis.set_ylabel("Frequency (Hz)")
     power_axis.set_ylabel("Power (pu)")
-    resistance_axis.set_ylabel("Resistance (ohm)")
-    resistance_axis.set_xlabel("Time (s)")
+    impedance_axis.set_ylabel("Impedance magnitude (ohm)")
+    impedance_axis.set_xlabel("Time (s)")
     frequency_axis.set_title(animation_title)
     frequency_axis.set_ylim(*_axis_limits(results.frequency_hz))
     power_axis.set_ylim(
@@ -446,8 +456,8 @@ def generate_frequency_power_animation(
             )
         )
     )
-    resistance_axis.set_ylim(*_axis_limits(results.load_resistance_ohm))
-    resistance_axis.set_xlim(0.0, config.SIMULATION_TIME_S)
+    impedance_axis.set_ylim(*_axis_limits(results.load_impedance_magnitude_ohm))
+    impedance_axis.set_xlim(0.0, config.SIMULATION_TIME_S)
 
     def update(frame_index: int) -> list[object]:
         current_time_s = active_frame_times_s[frame_index]
@@ -465,21 +475,21 @@ def generate_frequency_power_animation(
             active_frame_times_s[current_slice],
             frame_reference_power_pu[current_slice],
         )
-        active_resistance_line.set_data(
+        active_impedance_line.set_data(
             active_frame_times_s[current_slice],
-            frame_resistance_ohm[current_slice],
+            frame_impedance_magnitude_ohm[current_slice],
         )
-        for marker in [frequency_marker, power_marker, resistance_marker]:
+        for marker in [frequency_marker, power_marker, impedance_marker]:
             marker.set_xdata([current_time_s, current_time_s])
         return [
             active_frequency_line,
             active_mechanical_line,
             active_electrical_line,
             active_reference_line,
-            active_resistance_line,
+            active_impedance_line,
             frequency_marker,
             power_marker,
-            resistance_marker,
+            impedance_marker,
         ]
 
     animation = FuncAnimation(
@@ -570,9 +580,9 @@ def generate_rotor_waveform_animation(
         omega_pu = state_matrix[0]
         theta_rad = state_matrix[3]
         field_current_pu = state_matrix[4]
-        resistance_ohm = np.asarray(simulation.load.resistance_at(sample_times_s), dtype=float)
+        impedance_ohm = np.asarray(simulation.load.impedance_at(sample_times_s), dtype=complex)
         terminal_quantities = simulation.electrical_model.terminal_quantities_at(
-            resistance_ohm,
+            impedance_ohm,
             field_current_pu,
             omega_pu,
         )
@@ -581,11 +591,10 @@ def generate_rotor_waveform_animation(
             terminal_quantities["terminal_voltage_phase_rms"],
             terminal_quantities["terminal_voltage_angle_rad"],
         )
-        current_a_a, current_b_a, current_c_a = simulation.model.phase_currents(
-            voltage_a_v,
-            voltage_b_v,
-            voltage_c_v,
-            resistance_ohm,
+        current_a_a, current_b_a, current_c_a = simulation.model.three_phase_currents(
+            theta_rad,
+            terminal_quantities["load_current_phase_rms"],
+            terminal_quantities["load_current_angle_rad"],
         )
 
         current_rotor_theta_rad = float(rotor_angle_rad[frame_index])
@@ -1023,8 +1032,13 @@ def generate_rotor_reference_slip_animation(
         results.time_s,
         active_frame_times_s,
     )
-    frame_load_resistance_ohm = _interpolate(
-        results.load_resistance_ohm,
+    frame_load_impedance_magnitude_ohm = _interpolate(
+        results.load_impedance_magnitude_ohm,
+        results.time_s,
+        active_frame_times_s,
+    )
+    frame_load_impedance_angle_deg = _interpolate(
+        results.load_impedance_angle_deg,
         results.time_s,
         active_frame_times_s,
     )
@@ -1052,14 +1066,15 @@ def generate_rotor_reference_slip_animation(
         width_ratios=[1.12, 1.35, 1.35],
         height_ratios=[1.0, 1.0, 0.90, 0.95],
     )
-    time_grid = grid[:, 1:].subgridspec(3, 2, hspace=0.46, wspace=0.26)
+    time_grid = grid[:, 1:].subgridspec(3, 2, hspace=0.46, wspace=0.42)
     rotor_axis = figure.add_subplot(grid[0:2, 0], projection="polar")
     phasor_axis = figure.add_subplot(grid[2:, 0], projection="polar")
     frequency_axis = figure.add_subplot(time_grid[0, 0])
     voltage_axis = figure.add_subplot(time_grid[0, 1], sharex=frequency_axis)
     power_axis = figure.add_subplot(time_grid[1, 0], sharex=frequency_axis)
     internal_voltage_axis = figure.add_subplot(time_grid[1, 1], sharex=frequency_axis)
-    resistance_axis = figure.add_subplot(time_grid[2, 0], sharex=frequency_axis)
+    impedance_axis = figure.add_subplot(time_grid[2, 0], sharex=frequency_axis)
+    impedance_angle_axis = impedance_axis.twinx()
     lead_axis = figure.add_subplot(time_grid[2, 1], sharex=frequency_axis)
 
     angle = np.linspace(0.0, 2.0 * math.pi, 400, dtype=float)
@@ -1272,17 +1287,32 @@ def generate_rotor_reference_slip_animation(
     _enable_grid(internal_voltage_axis)
     _fixed_legend(internal_voltage_axis, "upper right")
 
-    resistance_axis.plot(
+    impedance_axis.plot(
         animation_time_s,
-        frame_load_resistance_ohm,
+        frame_load_impedance_magnitude_ohm,
         alpha=0.25,
-        label="_Full load resistance",
+        label="_Full load impedance magnitude",
     )
-    resistance_line, = resistance_axis.plot([], [], label="Load resistance")
-    resistance_axis.set_title("Load Resistance")
-    resistance_axis.set_ylabel("Resistance (ohm)")
-    _enable_grid(resistance_axis)
-    _fixed_legend(resistance_axis, "upper right")
+    impedance_angle_axis.plot(
+        animation_time_s,
+        frame_load_impedance_angle_deg,
+        alpha=0.25,
+        color="tab:purple",
+        label="_Full load impedance angle",
+    )
+    impedance_magnitude_line, = impedance_axis.plot([], [], label="|Z|")
+    impedance_angle_line, = impedance_angle_axis.plot(
+        [],
+        [],
+        color="tab:purple",
+        label="Angle",
+    )
+    impedance_axis.set_title("Load Impedance")
+    impedance_axis.set_ylabel("|Z| (ohm)")
+    impedance_angle_axis.set_ylabel("Angle (deg)", labelpad=2.0)
+    _enable_grid(impedance_axis)
+    _fixed_legend(impedance_axis, "upper left")
+    _fixed_legend(impedance_angle_axis, "upper right")
 
     lead_axis.plot(
         animation_time_s,
@@ -1303,7 +1333,7 @@ def generate_rotor_reference_slip_animation(
         voltage_axis,
         power_axis,
         internal_voltage_axis,
-        resistance_axis,
+        impedance_axis,
         lead_axis,
     ]
     current_markers = [
@@ -1332,7 +1362,8 @@ def generate_rotor_reference_slip_animation(
         )
     )
     internal_voltage_axis.set_ylim(*_axis_limits(frame_internal_voltage_v))
-    resistance_axis.set_ylim(*_axis_limits(frame_load_resistance_ohm))
+    impedance_axis.set_ylim(*_axis_limits(frame_load_impedance_magnitude_ohm))
+    impedance_angle_axis.set_ylim(*_axis_limits(frame_load_impedance_angle_deg))
     lead_axis.set_ylim(*_axis_limits(lead_cycles))
 
     def update(frame_index: int) -> list[object]:
@@ -1355,8 +1386,12 @@ def generate_rotor_reference_slip_animation(
         current_terminal_voltage_pu = float(frame_terminal_voltage_pu[frame_index])
         current_load_current_pu = float(frame_load_current_pu[frame_index])
         current_terminal_angle_rad = float(frame_terminal_angle_rad[frame_index])
+        current_load_impedance_angle_rad = math.radians(float(frame_load_impedance_angle_deg[frame_index]))
         internal_voltage_angle_rad, terminal_voltage_angle_rad, load_current_angle_rad = (
-            calculate_terminal_reference_phasor_angles(current_terminal_angle_rad)
+            calculate_terminal_reference_phasor_angles(
+                current_terminal_angle_rad,
+                current_load_impedance_angle_rad,
+            )
         )
         phasor_reference_line.xy = (0.0, phasor_limit)
         phasor_reference_line.set_position((0.0, 0.0))
@@ -1397,9 +1432,13 @@ def generate_rotor_reference_slip_animation(
             animation_time_s[current_slice],
             frame_internal_voltage_v[current_slice],
         )
-        resistance_line.set_data(
+        impedance_magnitude_line.set_data(
             animation_time_s[current_slice],
-            frame_load_resistance_ohm[current_slice],
+            frame_load_impedance_magnitude_ohm[current_slice],
+        )
+        impedance_angle_line.set_data(
+            animation_time_s[current_slice],
+            frame_load_impedance_angle_deg[current_slice],
         )
         lead_line.set_data(
             animation_time_s[current_slice],
@@ -1424,7 +1463,8 @@ def generate_rotor_reference_slip_animation(
             mechanical_power_line,
             electrical_power_line,
             internal_voltage_line,
-            resistance_line,
+            impedance_magnitude_line,
+            impedance_angle_line,
             lead_line,
             *current_markers,
         ]

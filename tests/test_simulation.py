@@ -24,14 +24,14 @@ def test_unregulated_generator_keeps_mechanical_power_constant_after_load_step()
     second_step_index = int(np.searchsorted(results.time_s, config.SECOND_LOAD_STEP_TIME_S))
     after_second_step_index = int(np.searchsorted(results.time_s, config.SECOND_LOAD_STEP_TIME_S + 0.20))
 
-    assert results.frequency_hz[later_index] < results.frequency_hz[step_index] - 0.01
+    assert results.frequency_hz[later_index] > results.frequency_hz[step_index] + 0.01
     assert results.frequency_hz[after_second_step_index] > results.frequency_hz[second_step_index] + 0.01
-    assert math.isclose(results.mechanical_power_pu[-1], config.INITIAL_LOAD_PU, abs_tol=1e-9)
-    assert math.isclose(results.mechanical_power_reference_pu[-1], config.INITIAL_LOAD_PU, abs_tol=1e-9)
+    assert math.isclose(results.mechanical_power_pu[-1], config.initial_active_power_pu, abs_tol=1e-9)
+    assert math.isclose(results.mechanical_power_reference_pu[-1], config.initial_active_power_pu, abs_tol=1e-9)
     assert math.isclose(results.electrical_power_pu[-1], results.mechanical_power_pu[-1], abs_tol=0.01)
 
 
-def test_unregulated_speed_coupled_voltage_generator_returns_to_60_hz_after_third_step() -> None:
+def test_unregulated_speed_coupled_voltage_generator_returns_to_60_hz_after_restored_impedance() -> None:
     config = SimulationConfig()
     results = DynamicSimulation(config).run()
     theory = calculate_unregulated_frequency_theory(config)
@@ -39,7 +39,7 @@ def test_unregulated_speed_coupled_voltage_generator_returns_to_60_hz_after_thir
     after_third_step_index = int(np.searchsorted(results.time_s, config.THIRD_LOAD_STEP_TIME_S + 0.20))
 
     assert theory.has_finite_equilibrium
-    assert results.frequency_hz.min() < config.F_NOM_HZ - 5.0
+    assert results.frequency_hz.max() > config.F_NOM_HZ + 5.0
     assert results.frequency_hz[after_third_step_index] < results.frequency_hz[third_step_index] - 0.01
     assert math.isclose(theory.final_frequency_hz, config.F_NOM_HZ, abs_tol=0.01)
     assert math.isclose(

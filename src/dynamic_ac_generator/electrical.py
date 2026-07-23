@@ -9,7 +9,7 @@ import numpy as np
 
 from dynamic_ac_generator.config import SimulationConfig
 from dynamic_ac_generator.excitation import OpenLoopExcitationModel
-from dynamic_ac_generator.model_types import FloatArray
+from dynamic_ac_generator.model_types import ComplexArray, FloatArray
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,9 @@ class TerminalQuantities:
     terminal_voltage_ll_rms: float
     terminal_voltage_angle_rad: float
     load_current_phase_rms: float
+    load_current_angle_rad: float
     electrical_power_pu: float
+    reactive_power_pu: float
 
 
 class TerminalElectricalModel:
@@ -48,7 +50,7 @@ class TerminalElectricalModel:
 
     def solve_terminal_quantities(
         self,
-        load_resistance_ohm: float,
+        load_impedance_ohm: complex,
         field_current_pu: float,
         omega_pu: float = 1.0,
     ) -> TerminalQuantities:
@@ -58,11 +60,11 @@ class TerminalElectricalModel:
             omega_pu,
         )
         internal_voltage = complex(internal_voltage_phase_rms, 0.0)
-        current = internal_voltage / (complex(load_resistance_ohm, 0.0) + self.series_impedance_ohm)
-        terminal_voltage = current * load_resistance_ohm
+        current = internal_voltage / (complex(load_impedance_ohm) + self.series_impedance_ohm)
+        terminal_voltage = current * load_impedance_ohm
         terminal_voltage_phase_rms = abs(terminal_voltage)
         load_current_phase_rms = abs(current)
-        electrical_power_w = 3.0 * terminal_voltage_phase_rms**2 / load_resistance_ohm
+        complex_power_va = 3.0 * terminal_voltage * np.conj(current)
         return TerminalQuantities(
             field_current_pu=field_current_pu,
             omega_pu=omega_pu,
@@ -72,26 +74,28 @@ class TerminalElectricalModel:
             terminal_voltage_ll_rms=math.sqrt(3.0) * terminal_voltage_phase_rms,
             terminal_voltage_angle_rad=math.atan2(terminal_voltage.imag, terminal_voltage.real),
             load_current_phase_rms=load_current_phase_rms,
-            electrical_power_pu=electrical_power_w / self.config.S_BASE_VA,
+            load_current_angle_rad=math.atan2(current.imag, current.real),
+            electrical_power_pu=float(np.real(complex_power_va)) / self.config.S_BASE_VA,
+            reactive_power_pu=float(np.imag(complex_power_va)) / self.config.S_BASE_VA,
         )
 
     def terminal_quantities_at(
         self,
-        load_resistance_ohm: FloatArray,
+        load_impedance_ohm: ComplexArray,
         field_current_pu: FloatArray,
         omega_pu: FloatArray,
     ) -> dict[str, FloatArray]:
         """Return vectorized terminal quantities for arrays of load and field current."""
-        load_array = np.asarray(load_resistance_ohm, dtype=float)
+        load_array = np.asarray(load_impedance_ohm, dtype=complex)
         field_array = np.asarray(field_current_pu, dtype=float)
         omega_array = np.asarray(omega_pu, dtype=float)
         internal_phase_rms = self.excitation.excitation_gain_phase_rms * field_array * omega_array
         internal_voltage = internal_phase_rms.astype(complex)
-        current = internal_voltage / (load_array.astype(complex) + self.series_impedance_ohm)
+        current = internal_voltage / (load_array + self.series_impedance_ohm)
         terminal_voltage = current * load_array
         terminal_phase_rms = np.abs(terminal_voltage)
         current_phase_rms = np.abs(current)
-        electrical_power_pu = 3.0 * terminal_phase_rms**2 / load_array / self.config.S_BASE_VA
+        complex_power_pu = 3.0 * terminal_voltage * np.conj(current) / self.config.S_BASE_VA
         return {
             "internal_voltage_phase_rms": internal_phase_rms.astype(float),
             "internal_voltage_ll_rms": (math.sqrt(3.0) * internal_phase_rms).astype(float),
@@ -99,5 +103,7 @@ class TerminalElectricalModel:
             "terminal_voltage_ll_rms": (math.sqrt(3.0) * terminal_phase_rms).astype(float),
             "terminal_voltage_angle_rad": np.angle(terminal_voltage).astype(float),
             "load_current_phase_rms": current_phase_rms.astype(float),
-            "electrical_power_pu": electrical_power_pu.astype(float),
+            "load_current_angle_rad": np.angle(current).astype(float),
+            "electrical_power_pu": np.real(complex_power_pu).astype(float),
+            "reactive_power_pu": np.imag(complex_power_pu).astype(float),
         }

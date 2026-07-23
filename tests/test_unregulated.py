@@ -10,8 +10,8 @@ def test_unregulated_initial_state_is_60_hz_with_first_load() -> None:
     results = DynamicSimulation(config).run()
 
     assert math.isclose(results.frequency_hz[0], 60.0, abs_tol=1e-9)
-    assert math.isclose(results.mechanical_power_pu[0], config.INITIAL_LOAD_PU, abs_tol=1e-9)
-    assert math.isclose(results.electrical_power_pu[0], config.INITIAL_LOAD_PU, abs_tol=1e-9)
+    assert math.isclose(results.mechanical_power_pu[0], config.initial_active_power_pu, abs_tol=1e-9)
+    assert math.isclose(results.electrical_power_pu[0], config.initial_active_power_pu, abs_tol=1e-9)
 
 
 def test_unregulated_speed_derivative_matches_swing_equation_after_load_step() -> None:

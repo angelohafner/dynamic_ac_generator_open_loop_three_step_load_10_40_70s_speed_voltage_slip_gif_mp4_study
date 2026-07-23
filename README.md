@@ -1,7 +1,7 @@
 # Dynamic AC Generator Open-Loop Three-Step Load Study
 
 This repository contains a didactic Python project for studying a simplified
-isolated three-phase AC generator feeding a balanced star-connected resistive
+isolated three-phase AC generator feeding a balanced star-connected complex-impedance
 load. The default study is open loop for speed and open loop for voltage:
 
 - no speed governor in the default case
@@ -9,7 +9,7 @@ load. The default study is open loop for speed and open loop for voltage:
 - constant mechanical input
 - constant field current
 - generated internal voltage proportional to field current and rotor speed
-- balanced three-phase resistive load
+- balanced three-phase impedance load with configurable magnitude and angle
 - static figures, CSV outputs, GIF animations, and an MP4 animation
 
 The project was evolved from an exploratory notebook into a modular Python
@@ -26,35 +26,35 @@ omega_pu(0) = 1.0
 V_terminal_LL_RMS(0) = 400 V
 If(0) = 1.0 pu
 Pm(0) = Pe(0)
-initial load = 0.50 pu
+initial load impedance = 0.50 pu angle -45 deg
 ```
 
-The default load schedule is:
+The default load-impedance schedule is:
 
 ```text
-t = 0 s:    load = 0.50 pu
-t = 10 s:   load = 0.80 pu
-t = 40 s:   load = 0.20 pu
-t = 70 s:   load = 0.50 pu
+t = 0 s:    Z_load = 0.50 pu angle -45 deg
+t = 10 s:   Z_load = 0.80 pu angle -30 deg
+t = 40 s:   Z_load = 0.20 pu angle -60 deg
+t = 70 s:   Z_load = 0.50 pu angle -45 deg
 t = 100 s:  end of simulation
 ```
 
 Interpretation:
 
 - `0 s` to `10 s`: steady at 60 Hz.
-- After `10 s`: electrical load increases and the rotor slows down.
-- After `40 s`: electrical load decreases strongly and the rotor accelerates above 60 Hz.
-- After `70 s`: load returns to the initial value and the frequency tends back toward 60 Hz.
+- After `10 s`: active electrical power drops and the rotor accelerates.
+- After `40 s`: the rotor keeps accelerating in this selected open-loop case.
+- After `70 s`: load impedance returns to the initial value, electrical power becomes larger than mechanical input at high speed, and the rotor decelerates toward 60 Hz.
 - By `100 s`: the frequency is close to the final theoretical open-loop equilibrium.
 
-At nominal voltage, the balanced star-connected phase resistances for the four
-load plateaus are:
+The per-phase impedance magnitudes in ohms are obtained from
+`Z_base = V_LL^2 / S_base = 1.6 ohm`:
 
 ```text
-0.50 pu -> 3.20 ohm per phase
-0.80 pu -> 2.00 ohm per phase
-0.20 pu -> 8.00 ohm per phase
-0.50 pu -> 3.20 ohm per phase
+0.50 pu angle -45 deg -> |Z| = 0.80 ohm
+0.80 pu angle -30 deg -> |Z| = 1.28 ohm
+0.20 pu angle -60 deg -> |Z| = 0.32 ohm
+0.50 pu angle -45 deg -> |Z| = 0.80 ohm
 ```
 
 The accumulated rotor-reference angle does not necessarily return to zero when
@@ -90,16 +90,19 @@ d theta / dt = omega_nominal omega
 Balanced terminal phasor model:
 
 ```text
-I_load = E_phase / (R_load + R_s + jX_s)
-V_terminal_phase = I_load R_load
-Pe = 3 |V_terminal_phase|^2 / R_load
+Z_load = |Z_load| angle phi_load
+I_load = E_phase / (Z_load + R_s + jX_s)
+V_terminal_phase = I_load Z_load
+S_load = 3 V_terminal_phase conj(I_load)
+Pe = Re(S_load) / S_base
+Qe = Im(S_load) / S_base
 ```
 
 Terminal phasor diagram convention:
 
 ```text
 V_terminal = |V_terminal| angle 0 deg
-I_load angle = 0 deg for the balanced resistive load
+I_load angle = -phi_load
 E_internal angle = -angle(V_terminal in the internal-voltage reference frame)
 ```
 
@@ -174,7 +177,7 @@ The synchronized `06_rotor_reference_slip` animation contains:
 - a shaded rotor-reference lag sector
 - six time-domain charts arranged as 3 rows by 2 columns:
   frequency, terminal voltage, mechanical/electrical power, internal voltage,
-  load resistance in ohms, and accumulated reference lead
+  load impedance magnitude/angle, and accumulated reference lead
 
 The shaded sector starts at 20 percent opacity and becomes more opaque as the
 absolute accumulated lead or lag grows:
@@ -189,12 +192,11 @@ sector are intentionally hidden from legends. The rotating-vector panel and the
 terminal phasor panel both use Matplotlib polar axes. The terminal phasors are
 drawn as arrows, not endpoint dots, so the arrowhead marks the fasor direction.
 The terminal phasor panel uses the terminal voltage as the angular reference:
-`V_terminal = |V_terminal| angle 0 deg`. Because the default load is purely
-resistive, the load-current fasor is also drawn at `0 deg`, while the internal
-voltage fasor is drawn relative to that terminal-voltage reference. The terminal
-phasor radial grid uses fixed circular ticks at `0.5`, `1.0`, and `1.5` pu. The
-rotor lag text uses an opaque white background so `Lead` and `Full turns` remain
-readable over the polar grid.
+`V_terminal = |V_terminal| angle 0 deg`. The load-current fasor is drawn at
+`-phi_load`, and the internal voltage fasor is drawn relative to that
+terminal-voltage reference. The terminal phasor radial grid uses fixed circular
+ticks at `0.5`, `1.0`, and `1.5` pu. The rotor lag text uses an opaque white
+background so `Lead` and `Full turns` remain readable over the polar grid.
 
 ## Project Structure
 
@@ -243,7 +245,7 @@ animation is intentionally MP4-only; the paired GIF is removed if it exists.
 ## Module Responsibilities
 
 - `config.py`: editable parameters, load schedule, base quantities, and validation
-- `load.py`: balanced resistive load schedule and phase resistance calculation
+- `load.py`: balanced complex-impedance load schedule and impedance calculation
 - `excitation.py`: open-loop `E = K_e If omega_pu` excitation model
 - `electrical.py`: balanced per-phase terminal phasor model
 - `generator.py`: state derivatives and three-phase waveform reconstruction
@@ -334,13 +336,14 @@ results/animations/06_rotor_reference_slip.mp4
 
 The `06_rotor_reference_slip.mp4` animation is the only default animation that
 is rendered directly as MP4 without a GIF companion. It includes the load
-resistance panel and the terminal phasor diagram.
+impedance panel and the terminal phasor diagram.
 
 Important static figures:
 
 ```text
 results/figures/01_generator_frequency.png
 results/figures/03_mechanical_and_electrical_power.png
+results/figures/04_load_impedance.png
 results/figures/17_open_loop_internal_terminal_voltage.png
 results/figures/18_open_loop_load_current_field_current.png
 results/figures/19_open_loop_power_speed_equilibrium.png
@@ -355,6 +358,7 @@ omega_pu
 frequency_error_hz
 mechanical_power_pu
 electrical_power_pu
+reactive_power_pu
 mechanical_power_reference_pu
 field_current_pu
 internal_voltage_ll_rms
@@ -362,7 +366,11 @@ terminal_voltage_ll_rms
 terminal_voltage_phase_rms
 terminal_voltage_angle_rad
 load_current_phase_rms
-load_resistance_ohm
+load_current_angle_rad
+load_impedance_real_ohm
+load_impedance_imag_ohm
+load_impedance_magnitude_ohm
+load_impedance_angle_deg
 rotor_angle_rad
 ```
 
@@ -378,12 +386,12 @@ The tests cover:
 
 - nominal initial operating point
 - load schedule at `10 s`, `40 s`, and `70 s`
-- balanced resistive load resistance calculations
+- balanced complex-impedance load calculations
 - terminal-voltage-reference phasor convention
 - open-loop field-current behavior
 - generated voltage proportional to field current and speed
-- terminal-voltage drop after the first load increase
-- frequency decrease, recovery, and final return toward 60 Hz
+- terminal-voltage drop after the first impedance change
+- frequency acceleration, deceleration, and final return toward 60 Hz
 - open-loop equilibrium theory
 - damping comparison outputs
 - waveform consistency
@@ -398,9 +406,9 @@ The tests cover:
 After the default run, the expected qualitative behavior is:
 
 - `0 s` to `10 s`: steady at 60 Hz
-- after `10 s`: frequency decreases because electrical load increases
-- after `40 s`: frequency increases because electrical load decreases to `0.20 pu`
-- after `70 s`: frequency decreases toward 60 Hz because load returns to the initial value
+- after `10 s`: frequency increases because active electrical power drops
+- after `40 s`: frequency continues increasing in this selected open-loop case
+- after `70 s`: frequency decreases toward 60 Hz because load impedance returns to the initial value
 - by `100 s`: frequency is close to the final theoretical open-loop equilibrium
 
 ## Notes For Codex
@@ -425,7 +433,8 @@ This repository is intended to be self-contained. A new Codex session should:
    this figure; otherwise the load markers visually become `0 s`, `30 s`, and
    `60 s` even though the simulation is configured for `10 s`, `40 s`, and
    `70 s`.
-10. Keep the load-resistance panel on the absolute simulation-time axis.
+10. Keep the load-impedance panel on the absolute simulation-time axis, with
+    `|Z|` on the left y-axis and impedance angle in degrees on the right y-axis.
 11. Keep the terminal phasor diagram below the rotating vectors in the left
     column.
 12. Keep both left-column vector panels on Matplotlib polar axes, and keep the
@@ -434,8 +443,8 @@ This repository is intended to be self-contained. A new Codex session should:
 14. Keep the rotor lag `Lead` and `Full turns` text on an opaque white
     background.
 15. Keep the terminal phasor diagram referenced to terminal voltage:
-    `V_terminal = |V_terminal| angle 0 deg`; for the default resistive load,
-    draw `I_load` at `0 deg` and draw `E_internal` relative to that reference.
+    `V_terminal = |V_terminal| angle 0 deg`; draw `I_load` at `-phi_load`
+    and draw `E_internal` relative to that reference.
 
 When changing load-step timing, update:
 
@@ -464,5 +473,5 @@ This is a teaching model. It does not include:
 - protection or instability events for extreme low-speed operation
 
 The model is useful for didactic active-power, frequency, excitation,
-voltage-drop, and rotor-reference slip behavior in a balanced isolated
+voltage-drop, reactive-power, and rotor-reference slip behavior in a balanced isolated
 generator.

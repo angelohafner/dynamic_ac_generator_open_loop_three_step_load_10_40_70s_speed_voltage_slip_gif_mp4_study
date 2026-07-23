@@ -7,13 +7,13 @@ from dynamic_ac_generator.runner import run_complete_simulation
 from dynamic_ac_generator.simulation import DynamicSimulation
 
 
-def test_undamped_speed_coupled_voltage_case_has_lower_frequency_equilibrium() -> None:
+def test_undamped_speed_coupled_voltage_case_has_higher_frequency_equilibrium() -> None:
     config = SimulationConfig(CONTROL_MODE="unregulated", D=0.0, ADDITIONAL_LOAD_STEPS=())
 
     theory = calculate_unregulated_frequency_theory(config)
 
     assert theory.has_finite_equilibrium
-    assert theory.final_frequency_hz < config.F_NOM_HZ
+    assert theory.final_frequency_hz > config.F_NOM_HZ
     assert math.isclose(
         theory.electrical_power_pu,
         theory.mechanical_power_pu,
@@ -31,7 +31,7 @@ def test_damped_unregulated_theory_predicts_lower_stable_frequency() -> None:
 
     assert theory.has_finite_equilibrium
     assert math.isclose(theory.final_frequency_hz, expected_final_frequency_hz, abs_tol=1e-9)
-    assert theory.final_frequency_hz < config.F_NOM_HZ
+    assert theory.final_frequency_hz > config.F_NOM_HZ
     assert 0.0 < theory.time_constant_s < 3.0
     assert theory.settling_time_s > config.LOAD_STEP_TIME_S
     assert theory.settling_time_after_step_s < 5.0
@@ -49,7 +49,7 @@ def test_damped_unregulated_simulation_converges_to_theoretical_frequency() -> N
 
     assert theory.has_finite_equilibrium
     assert math.isclose(results.frequency_hz[-1], theory.final_frequency_hz, abs_tol=0.05)
-    assert math.isclose(results.mechanical_power_pu[-1], config.INITIAL_LOAD_PU, abs_tol=1e-9)
+    assert math.isclose(results.mechanical_power_pu[-1], config.initial_active_power_pu, abs_tol=1e-9)
 
 
 def test_undamped_speed_coupled_voltage_simulation_converges_to_theoretical_frequency() -> None:

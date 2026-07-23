@@ -25,7 +25,7 @@ class IsochronousGovernor:
     ) -> float | FloatArray:
         """Calculate the unlimited mechanical power reference in per unit."""
         error_pu = self.speed_error_pu(omega_pu)
-        return self.config.INITIAL_LOAD_PU + self.config.KP * error_pu + self.config.KI * integral_state
+        return self.config.initial_active_power_pu + self.config.KP * error_pu + self.config.KI * integral_state
 
     def limited_reference_power_pu(
         self,

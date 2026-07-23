@@ -1,14 +1,14 @@
 status,check,value,unit
 PASS,Initial frequency is approximately 60 Hz,0.0,Hz error
-PASS,Initial mechanical and electrical powers are equal,5.551115123125783e-17,pu error
-PASS,Frequency initially decreases after the load increase,-0.4420783274295985,Hz change
+PASS,Initial mechanical and electrical powers are equal,0.0,pu error
+PASS,Frequency initially increases after the first impedance change,1.0748964902589435,Hz change
 PASS,Mechanical power remains constant without a speed regulator,0.0,pu change
 PASS,Initial terminal voltage is nominal in open-loop excitation,0.0,V LL RMS error
 PASS,Field current remains constant in open-loop excitation,0.0,pu change
-PASS,Terminal voltage drops after the load increase,18.852697644212128,V LL RMS drop
-PASS,Final frequency reaches the theoretical open-loop equilibrium,0.16157934036542798,Hz error
-PASS,Frequency increases after the second load reduction,0.7027843907800246,Hz change
-PASS,Frequency decreases after the third load restoration,-1.215488867074825,Hz change
-PASS,Three phase voltages are displaced by approximately 120 degrees,0.7901980256260401,degree error
-PASS,Total instantaneous power varies smoothly for a balanced resistive load,0.002584317884958664,relative standard deviation
-PASS,Energy and power signs are consistent immediately after the disturbance,-0.03755461648329151,pu/s speed derivative
+PASS,Terminal voltage drops after the first impedance change,43.2158153685852,V LL RMS drop
+PASS,Final frequency reaches the theoretical open-loop equilibrium,2.0769924176988752e-05,Hz error
+PASS,Frequency increases after the second impedance change,1.0588366007894336,Hz change
+PASS,Frequency decreases after the third load restoration,-4.3605403965242004,Hz change
+PASS,Three phase voltages are displaced by approximately 120 degrees,0.6733351407849426,degree error
+PASS,Total instantaneous power varies smoothly for a balanced impedance load,0.006247279610029779,relative standard deviation
+PASS,Energy and power signs are consistent immediately after the disturbance,0.09165801143304056,pu/s speed derivative

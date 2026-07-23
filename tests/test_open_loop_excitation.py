@@ -2,6 +2,7 @@ import math
 
 import numpy as np
 
+from dynamic_ac_generator import load as load_module
 from dynamic_ac_generator.config import SimulationConfig
 from dynamic_ac_generator.electrical import TerminalElectricalModel
 from dynamic_ac_generator.excitation import OpenLoopExcitationModel
@@ -15,14 +16,18 @@ def test_excitation_initial_current_produces_nominal_terminal_voltage() -> None:
     electrical = TerminalElectricalModel(config, excitation)
 
     terminal = electrical.solve_terminal_quantities(
-        config.initial_resistance_ohm,
+        config.initial_impedance_ohm,
         config.FIELD_CURRENT_INITIAL_PU,
         omega_pu=1.0,
     )
+    assert hasattr(load_module, "ImpedanceLoad")
+    load = load_module.ImpedanceLoad(config)
 
     assert math.isclose(terminal.terminal_voltage_ll_rms, config.V_LL_RMS, rel_tol=1e-12)
-    assert terminal.internal_voltage_ll_rms > terminal.terminal_voltage_ll_rms
-    assert math.isclose(terminal.electrical_power_pu, config.INITIAL_LOAD_PU, rel_tol=1e-12)
+    assert terminal.internal_voltage_ll_rms > 0.0
+    assert math.isclose(terminal.electrical_power_pu, load.nominal_voltage_active_power_pu_at(0.0), rel_tol=1e-12)
+    assert math.isclose(terminal.reactive_power_pu, load.nominal_voltage_reactive_power_pu_at(0.0), rel_tol=1e-12)
+    assert terminal.load_current_angle_rad > terminal.terminal_voltage_angle_rad
 
 
 def test_excitation_voltage_is_proportional_to_field_current_and_speed() -> None:
@@ -35,7 +40,7 @@ def test_excitation_voltage_is_proportional_to_field_current_and_speed() -> None
     assert math.isclose(slow_voltage, 0.8 * nominal_voltage, rel_tol=1e-12)
 
 
-def test_open_loop_load_step_and_speed_drop_reduce_terminal_voltage_with_constant_field_current() -> None:
+def test_open_loop_load_step_changes_voltage_with_constant_field_current() -> None:
     config = SimulationConfig()
     results = DynamicSimulation(config).run()
 
@@ -45,11 +50,15 @@ def test_open_loop_load_step_and_speed_drop_reduce_terminal_voltage_with_constan
     assert math.isclose(results.field_current_pu[-1], config.FIELD_CURRENT_INITIAL_PU, abs_tol=1e-12)
     assert math.isclose(results.terminal_voltage_ll_rms[0], config.V_LL_RMS, abs_tol=1e-9)
     assert results.terminal_voltage_ll_rms[step_index + 1] < results.terminal_voltage_ll_rms[0]
-    assert results.internal_voltage_ll_rms[step_index + 1] < results.internal_voltage_ll_rms[0]
-    assert math.isclose(results.internal_voltage_ll_rms[-1], results.internal_voltage_ll_rms[0], abs_tol=5.0)
+    assert math.isclose(
+        results.internal_voltage_ll_rms[step_index + 1] / results.internal_voltage_ll_rms[0],
+        results.omega_pu[step_index + 1],
+        rel_tol=1e-9,
+    )
+    assert math.isclose(results.internal_voltage_ll_rms[-1], results.internal_voltage_ll_rms[0], abs_tol=1.0)
     assert math.isclose(results.frequency_hz[-1], config.F_NOM_HZ, abs_tol=config.DAMPING_SETTLING_TOLERANCE_HZ)
-    assert results.electrical_power_pu[step_index + 1] < config.FINAL_LOAD_PU
-    assert results.electrical_power_pu[step_index + 1] > config.INITIAL_LOAD_PU
+    assert results.electrical_power_pu[step_index + 1] < results.electrical_power_pu[0]
+    assert results.reactive_power_pu[step_index + 1] < 0.0
 
 
 def test_waveform_dataframe_uses_terminal_voltage_after_load_step() -> None:
@@ -84,5 +93,8 @@ def test_complete_run_writes_open_loop_voltage_outputs(tmp_path) -> None:
     assert "19_open_loop_power_speed_equilibrium.png" in figure_names
     assert "field_current_pu" in artifacts.results.to_dataframe().columns
     assert "terminal_voltage_ll_rms" in artifacts.results.to_dataframe().columns
+    assert "load_impedance_magnitude_ohm" in artifacts.results.to_dataframe().columns
+    assert "load_impedance_angle_deg" in artifacts.results.to_dataframe().columns
+    assert "reactive_power_pu" in artifacts.results.to_dataframe().columns
     assert artifacts.open_loop_equilibrium_curve_path is not None
     assert artifacts.open_loop_equilibrium_curve_path.exists()

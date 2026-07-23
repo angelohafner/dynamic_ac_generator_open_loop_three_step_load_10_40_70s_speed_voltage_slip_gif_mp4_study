@@ -25,7 +25,11 @@ class SimulationResults:
     mechanical_power_pu: FloatArray
     rotor_angle_rad: FloatArray
     electrical_power_pu: FloatArray
-    load_resistance_ohm: FloatArray
+    reactive_power_pu: FloatArray
+    load_impedance_real_ohm: FloatArray
+    load_impedance_imag_ohm: FloatArray
+    load_impedance_magnitude_ohm: FloatArray
+    load_impedance_angle_deg: FloatArray
     mechanical_power_reference_pu: FloatArray
     field_current_pu: FloatArray
     internal_voltage_ll_rms: FloatArray
@@ -33,6 +37,7 @@ class SimulationResults:
     terminal_voltage_phase_rms: FloatArray
     terminal_voltage_angle_rad: FloatArray
     load_current_phase_rms: FloatArray
+    load_current_angle_rad: FloatArray
     state_sampler: Callable[[FloatArray], FloatArray] = field(repr=False)
 
     @property
@@ -55,6 +60,7 @@ class SimulationResults:
                 "frequency_error_hz": self.frequency_error_hz,
                 "mechanical_power_pu": self.mechanical_power_pu,
                 "electrical_power_pu": self.electrical_power_pu,
+                "reactive_power_pu": self.reactive_power_pu,
                 "mechanical_power_reference_pu": self.mechanical_power_reference_pu,
                 "field_current_pu": self.field_current_pu,
                 "internal_voltage_ll_rms": self.internal_voltage_ll_rms,
@@ -62,7 +68,11 @@ class SimulationResults:
                 "terminal_voltage_phase_rms": self.terminal_voltage_phase_rms,
                 "terminal_voltage_angle_rad": self.terminal_voltage_angle_rad,
                 "load_current_phase_rms": self.load_current_phase_rms,
-                "load_resistance_ohm": self.load_resistance_ohm,
+                "load_current_angle_rad": self.load_current_angle_rad,
+                "load_impedance_real_ohm": self.load_impedance_real_ohm,
+                "load_impedance_imag_ohm": self.load_impedance_imag_ohm,
+                "load_impedance_magnitude_ohm": self.load_impedance_magnitude_ohm,
+                "load_impedance_angle_deg": self.load_impedance_angle_deg,
                 "rotor_angle_rad": self.rotor_angle_rad,
                 "governor_integral_state": self.integral_state,
             }
@@ -148,8 +158,12 @@ def build_summary_table(results: SimulationResults) -> pd.DataFrame:
         ("Final terminal voltage", float(results.terminal_voltage_ll_rms[-1]), "V LL RMS"),
         ("Initial load current", float(results.load_current_phase_rms[0]), "A phase RMS"),
         ("Final load current", float(results.load_current_phase_rms[-1]), "A phase RMS"),
-        ("Initial resistance", results.config.initial_resistance_ohm, "ohm"),
-        ("Final resistance", results.config.final_resistance_ohm, "ohm"),
+        ("Initial reactive power", float(results.reactive_power_pu[0]), "pu"),
+        ("Final reactive power", float(results.reactive_power_pu[-1]), "pu"),
+        ("Initial load impedance magnitude", float(results.load_impedance_magnitude_ohm[0]), "ohm"),
+        ("Initial load impedance angle", float(results.load_impedance_angle_deg[0]), "deg"),
+        ("Final load impedance magnitude", float(results.load_impedance_magnitude_ohm[-1]), "ohm"),
+        ("Final load impedance angle", float(results.load_impedance_angle_deg[-1]), "deg"),
         ("Settling time", format_metric_value(settling_time_s), "s"),
         ("Steady-state frequency error", float(results.config.F_NOM_HZ - frequency_hz[-1]), "Hz"),
     ]

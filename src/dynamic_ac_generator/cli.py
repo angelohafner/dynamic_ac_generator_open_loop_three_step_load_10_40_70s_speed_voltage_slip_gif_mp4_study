@@ -12,7 +12,7 @@ from dynamic_ac_generator.runner import run_complete_simulation
 def build_parser() -> argparse.ArgumentParser:
     """Build the command-line argument parser."""
     parser = argparse.ArgumentParser(
-        description="Run a simplified dynamic AC generator simulation with a balanced resistive load.",
+        description="Run a simplified dynamic AC generator simulation with a balanced impedance load.",
     )
     parser.add_argument(
         "--output-dir",

@@ -118,19 +118,28 @@ def generate_all_figures(
         )
     )
 
-    plt.figure(figsize=(9.0, 4.5))
-    plt.plot(results.time_s, results.load_resistance_ohm, label="Load phase resistance")
-    _add_load_step_marker(config)
-    figure_paths.append(
-        _finish_time_plot(
-            config,
-            output_dir,
-            "Load Resistance Versus Time",
-            "Time (s)",
-            "Phase resistance (ohm)",
-            "04_load_resistance.png",
-        )
+    figure, impedance_axis = plt.subplots(figsize=(9.0, 4.5))
+    impedance_angle_axis = impedance_axis.twinx()
+    magnitude_line, = impedance_axis.plot(
+        results.time_s,
+        results.load_impedance_magnitude_ohm,
+        label="|Z|",
     )
+    angle_line, = impedance_angle_axis.plot(
+        results.time_s,
+        results.load_impedance_angle_deg,
+        color="tab:purple",
+        label="Angle",
+    )
+    for step_index, step_time_s in enumerate(config.load_step_times_s, start=1):
+        impedance_axis.axvline(step_time_s, linestyle="--", label=f"_Load step {step_index}")
+    impedance_axis.set_title("Load Impedance Versus Time")
+    impedance_axis.set_xlabel("Time (s)")
+    impedance_axis.set_ylabel("|Z| (ohm)")
+    impedance_angle_axis.set_ylabel("Angle (deg)")
+    impedance_axis.grid(True, alpha=0.5)
+    impedance_axis.legend(handles=[magnitude_line, angle_line], loc="upper right")
+    figure_paths.append(_save_current_figure(output_dir, "04_load_impedance.png"))
 
     plt.figure(figsize=(9.0, 4.5))
     plt.plot(results.time_s, results.frequency_error_hz, label="Frequency error")

@@ -26,27 +26,28 @@ f(0) = 60 Hz
 omega_pu(0) = 1.0
 V_terminal_LL_RMS(0) = 400 V
 If(0) = 1.0 pu
-initial load = 0.50 pu
+initial load impedance = 0.50 pu angle -45 deg
 Pm(0) = Pe(0)
 ```
 
-Default load schedule:
+Default load-impedance schedule:
 
 ```text
-t = 0 s:    load = 0.50 pu
-t = 10 s:   load = 0.80 pu
-t = 40 s:   load = 0.20 pu
-t = 70 s:   load = 0.50 pu
+t = 0 s:    Z_load = 0.50 pu angle -45 deg
+t = 10 s:   Z_load = 0.80 pu angle -30 deg
+t = 40 s:   Z_load = 0.20 pu angle -60 deg
+t = 70 s:   Z_load = 0.50 pu angle -45 deg
 t = 100 s:  end of simulation
 ```
 
-The first load step makes the rotor slow down. The second load step reduces the
-electrical load strongly enough for the rotor to accelerate above 60 Hz. The
-third load step restores the initial electrical load, so the final open-loop
-equilibrium returns to 60 Hz.
+The first impedance step reduces active electrical power and makes the rotor
+accelerate. The second impedance step keeps the selected open-loop case
+accelerating. The third load step restores the initial impedance; at the high
+speed reached by then, electrical power is larger than mechanical input, so the
+rotor decelerates and the final open-loop equilibrium returns to 60 Hz.
 
-At nominal voltage, the balanced star-connected phase resistances for the four
-load plateaus are `3.20 ohm`, `2.00 ohm`, `8.00 ohm`, and `3.20 ohm`.
+With `Z_base = V_LL^2 / S_base = 1.6 ohm`, the four per-phase impedance
+magnitudes are `0.80 ohm`, `1.28 ohm`, `0.32 ohm`, and `0.80 ohm`.
 
 The accumulated rotor-reference angle does not have to return to zero when the
 frequency returns to 60 Hz. It is an integral of all previous frequency error,
@@ -77,16 +78,19 @@ dIf/dt = 0
 Terminal electrical model:
 
 ```text
-I_load = E_phase / (R_load + R_s + jX_s)
-V_terminal_phase = I_load R_load
-Pe = 3 |V_terminal_phase|^2 / R_load
+Z_load = |Z_load| angle phi_load
+I_load = E_phase / (Z_load + R_s + jX_s)
+V_terminal_phase = I_load Z_load
+S_load = 3 V_terminal_phase conj(I_load)
+Pe = Re(S_load) / S_base
+Qe = Im(S_load) / S_base
 ```
 
 Terminal phasor diagram convention:
 
 ```text
 V_terminal = |V_terminal| angle 0 deg
-I_load angle = 0 deg for the balanced resistive load
+I_load angle = -phi_load
 E_internal angle = -angle(V_terminal in the internal-voltage reference frame)
 ```
 
@@ -162,7 +166,7 @@ The `06_rotor_reference_slip` animation is a synchronized multi-panel figure:
 left upper panel: polar slow reference vector, rotor vector, and shaded lag sector
 left lower panel: polar terminal phasor diagram with arrowhead fasors
 right panels: six time charts arranged as 3 rows by 2 columns
-right chart contents: frequency, terminal voltage, power balance, internal voltage, load resistance, accumulated lead
+right chart contents: frequency, terminal voltage, power balance, internal voltage, load impedance magnitude/angle, accumulated lead
 ```
 
 This animation is intentionally rendered only as:
@@ -186,15 +190,16 @@ sector are intentionally hidden from legends. The left-column rotating-vector
 and terminal-phasor panels use Matplotlib polar projection; fasors use arrows
 instead of endpoint markers. The terminal phasor radial grid is fixed at `0.5`,
 `1.0`, and `1.5` pu. The terminal phasor diagram uses terminal voltage as the
-angular reference, so `V_terminal` is drawn at `0 deg`; for the default purely
-resistive load, `I_load` is also drawn at `0 deg`, and `E_internal` is drawn
-relative to that terminal-voltage reference. The rotor lag text uses an opaque
-white background.
+angular reference, so `V_terminal` is drawn at `0 deg`; `I_load` is drawn at
+`-phi_load`, and `E_internal` is drawn relative to that terminal-voltage
+reference. The load-impedance panel uses a secondary y-axis: `|Z|` in ohms on
+the left axis and impedance angle in degrees on the right axis. The rotor lag
+text uses an opaque white background.
 
 ## Module Responsibilities
 
 - `config.py`: editable parameters, load schedule, base quantities, and validation
-- `load.py`: balanced resistive load schedule and phase resistance calculation
+- `load.py`: balanced complex-impedance load schedule and impedance calculation
 - `excitation.py`: open-loop `E = K_e If omega_pu` excitation model
 - `electrical.py`: balanced per-phase terminal phasor model
 - `generator.py`: state derivatives and three-phase waveform reconstruction
@@ -268,6 +273,7 @@ omega_pu
 frequency_error_hz
 mechanical_power_pu
 electrical_power_pu
+reactive_power_pu
 mechanical_power_reference_pu
 field_current_pu
 internal_voltage_ll_rms
@@ -275,7 +281,11 @@ terminal_voltage_ll_rms
 terminal_voltage_phase_rms
 terminal_voltage_angle_rad
 load_current_phase_rms
-load_resistance_ohm
+load_current_angle_rad
+load_impedance_real_ohm
+load_impedance_imag_ohm
+load_impedance_magnitude_ohm
+load_impedance_angle_deg
 rotor_angle_rad
 ```
 
@@ -285,17 +295,17 @@ The open-loop validation checks that:
 
 - initial frequency is approximately 60 Hz
 - initial mechanical and electrical powers are equal
-- frequency initially decreases after the load increase
+- frequency initially increases after the first impedance change
 - mechanical power remains constant without a speed regulator
 - initial terminal voltage is nominal
 - field current remains constant without AVR
-- terminal voltage drops after the first load increase
+- terminal voltage drops after the first impedance change
 - final frequency reaches the theoretical open-loop equilibrium
-- frequency increases after the second load reduction
+- frequency increases after the second impedance change
 - frequency decreases after the third load restoration
 - terminal phasors are drawn relative to `V_terminal = |V_terminal| angle 0 deg`
 - phase voltages are displaced by approximately 120 degrees
-- total instantaneous power varies smoothly for a balanced resistive load
+- total instantaneous power varies smoothly for a balanced impedance load
 - power and speed-derivative signs are consistent
 
 ## Handoff Notes For Codex
@@ -315,7 +325,8 @@ A new Codex session should:
 8. Distinguish MP4 playback duration from physical simulation time: the current
    video plays for about `60.125 s`, while the time-chart x-axis is fixed from
    `0 s` to `100 s`.
-9. Keep the load-resistance chart in the right-side time-series stack.
+9. Keep the load-impedance chart in the right-side time-series stack, with
+   `|Z|` on the left y-axis and impedance angle in degrees on the right y-axis.
 10. Keep the six right-side time charts arranged as 3 rows by 2 columns.
 11. Keep the terminal phasor diagram directly below the rotating vectors.
 12. Keep both left-column vector panels on Matplotlib polar axes, with
@@ -326,7 +337,7 @@ A new Codex session should:
 15. Do not reintroduce `results/animations/06_rotor_reference_slip.gif`; this
     animation is intentionally MP4-only.
 16. Keep the terminal phasor panel referenced to terminal voltage:
-    `V_terminal = |V_terminal| angle 0 deg`.
+    `V_terminal = |V_terminal| angle 0 deg`, with `I_load` at `-phi_load`.
 
 When changing load-step timing, update:
 

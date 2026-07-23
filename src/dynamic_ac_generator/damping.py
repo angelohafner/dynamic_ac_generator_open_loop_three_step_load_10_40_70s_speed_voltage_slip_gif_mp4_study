@@ -72,12 +72,12 @@ def calculate_unregulated_frequency_theory(config: SimulationConfig) -> Unregula
     """Calculate the final equilibrium created by speed-coupled voltage."""
     electrical_model = TerminalElectricalModel(config, OpenLoopExcitationModel(config))
     initial_terminal = electrical_model.solve_terminal_quantities(
-        config.initial_resistance_ohm,
+        config.initial_impedance_ohm,
         config.FIELD_CURRENT_INITIAL_PU,
         omega_pu=1.0,
     )
     final_terminal_at_nominal_speed = electrical_model.solve_terminal_quantities(
-        config.final_resistance_ohm,
+        config.final_impedance_ohm,
         config.FIELD_CURRENT_INITIAL_PU,
         omega_pu=1.0,
     )
@@ -118,10 +118,13 @@ def calculate_unregulated_frequency_theory(config: SimulationConfig) -> Unregula
     final_frequency_hz = config.F_NOM_HZ * final_omega_pu
     linearized_restoring_gain = 2.0 * final_load_power_coefficient_pu * final_omega_pu + config.D
     time_constant_s = 2.0 * config.H / linearized_restoring_gain
-    previous_load_power_pu = config.load_schedule[-2][1]
-    previous_resistance_ohm = config.resistance_for_load_power_pu(previous_load_power_pu)
+    _, previous_load_impedance_pu, previous_load_angle_deg = config.load_schedule[-2]
+    previous_impedance_ohm = config.impedance_for_load_pu(
+        previous_load_impedance_pu,
+        previous_load_angle_deg,
+    )
     previous_terminal_at_nominal_speed = electrical_model.solve_terminal_quantities(
-        previous_resistance_ohm,
+        previous_impedance_ohm,
         config.FIELD_CURRENT_INITIAL_PU,
         omega_pu=1.0,
     )
@@ -186,14 +189,14 @@ def build_open_loop_equilibrium_curve(
     upper_omega_pu = max(1.25, theory.final_omega_pu * 1.08 if theory.has_finite_equilibrium else 1.25)
     omega_pu = np.linspace(0.40, upper_omega_pu, point_count, dtype=float)
     field_current_pu = np.full_like(omega_pu, config.FIELD_CURRENT_INITIAL_PU, dtype=float)
-    final_resistance_ohm = np.full_like(omega_pu, config.final_resistance_ohm, dtype=float)
+    final_impedance_ohm = np.full_like(omega_pu, config.final_impedance_ohm, dtype=complex)
     speed_coupled_quantities = electrical_model.terminal_quantities_at(
-        final_resistance_ohm,
+        final_impedance_ohm,
         field_current_pu,
         omega_pu,
     )
     old_constant_quantities = electrical_model.terminal_quantities_at(
-        final_resistance_ohm,
+        final_impedance_ohm,
         field_current_pu,
         np.ones_like(omega_pu, dtype=float),
     )

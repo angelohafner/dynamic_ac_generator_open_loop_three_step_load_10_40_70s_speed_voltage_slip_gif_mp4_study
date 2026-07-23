@@ -13,7 +13,7 @@ from dynamic_ac_generator.electrical import TerminalElectricalModel
 from dynamic_ac_generator.excitation import OpenLoopExcitationModel
 from dynamic_ac_generator.generator import GeneratorModel
 from dynamic_ac_generator.governor import IsochronousGovernor
-from dynamic_ac_generator.load import ResistiveLoad
+from dynamic_ac_generator.load import ImpedanceLoad
 from dynamic_ac_generator.model_types import FloatArray
 from dynamic_ac_generator.results import SimulationResults
 
@@ -23,7 +23,7 @@ class DynamicSimulation:
 
     def __init__(self, config: SimulationConfig) -> None:
         self.config = config
-        self.load = ResistiveLoad(config)
+        self.load = ImpedanceLoad(config)
         self.excitation = OpenLoopExcitationModel(config)
         self.electrical_model = TerminalElectricalModel(config, self.excitation)
         self.governor = IsochronousGovernor(config) if config.CONTROL_MODE == "pi" else None
@@ -66,7 +66,7 @@ class DynamicSimulation:
     def run(self) -> SimulationResults:
         """Run the dynamic simulation with one segment per load plateau."""
         initial_terminal_quantities = self.electrical_model.solve_terminal_quantities(
-            self.config.initial_resistance_ohm,
+            self.config.initial_impedance_ohm,
             self.config.FIELD_CURRENT_INITIAL_PU,
             omega_pu=1.0,
         )
@@ -122,9 +122,9 @@ class DynamicSimulation:
         mechanical_power_pu = state_matrix[2]
         rotor_angle_rad = state_matrix[3]
         field_current_pu = state_matrix[4]
-        load_resistance_ohm = np.asarray(self.load.resistance_at(time_s), dtype=float)
+        load_impedance_ohm = np.asarray(self.load.impedance_at(time_s), dtype=complex)
         terminal_quantities = self.electrical_model.terminal_quantities_at(
-            load_resistance_ohm,
+            load_impedance_ohm,
             field_current_pu,
             omega_pu,
         )
@@ -145,7 +145,11 @@ class DynamicSimulation:
             mechanical_power_pu=mechanical_power_pu,
             rotor_angle_rad=rotor_angle_rad,
             electrical_power_pu=electrical_power_pu,
-            load_resistance_ohm=load_resistance_ohm,
+            reactive_power_pu=terminal_quantities["reactive_power_pu"],
+            load_impedance_real_ohm=np.real(load_impedance_ohm).astype(float),
+            load_impedance_imag_ohm=np.imag(load_impedance_ohm).astype(float),
+            load_impedance_magnitude_ohm=np.abs(load_impedance_ohm).astype(float),
+            load_impedance_angle_deg=np.rad2deg(np.angle(load_impedance_ohm)).astype(float),
             mechanical_power_reference_pu=mechanical_power_reference_pu,
             field_current_pu=field_current_pu,
             internal_voltage_ll_rms=terminal_quantities["internal_voltage_ll_rms"],
@@ -153,6 +157,7 @@ class DynamicSimulation:
             terminal_voltage_phase_rms=terminal_quantities["terminal_voltage_phase_rms"],
             terminal_voltage_angle_rad=terminal_quantities["terminal_voltage_angle_rad"],
             load_current_phase_rms=terminal_quantities["load_current_phase_rms"],
+            load_current_angle_rad=terminal_quantities["load_current_angle_rad"],
             state_sampler=sample_state,
         )
 
@@ -180,9 +185,9 @@ class DynamicSimulation:
         state_matrix = results.state_sampler(time_s)
         theta_rad = state_matrix[3]
         field_current_pu = state_matrix[4]
-        resistance_ohm = np.asarray(self.load.resistance_at(time_s), dtype=float)
+        impedance_ohm = np.asarray(self.load.impedance_at(time_s), dtype=complex)
         terminal_quantities = self.electrical_model.terminal_quantities_at(
-            resistance_ohm,
+            impedance_ohm,
             field_current_pu,
             state_matrix[0],
         )
@@ -191,11 +196,10 @@ class DynamicSimulation:
             terminal_quantities["terminal_voltage_phase_rms"],
             terminal_quantities["terminal_voltage_angle_rad"],
         )
-        current_a_a, current_b_a, current_c_a = self.model.phase_currents(
-            voltage_a_v,
-            voltage_b_v,
-            voltage_c_v,
-            resistance_ohm,
+        current_a_a, current_b_a, current_c_a = self.model.three_phase_currents(
+            theta_rad,
+            terminal_quantities["load_current_phase_rms"],
+            terminal_quantities["load_current_angle_rad"],
         )
         total_power_w = (
             voltage_a_v * current_a_a
@@ -208,10 +212,14 @@ class DynamicSimulation:
                 "time_s": time_s,
                 "theta_rad": theta_rad,
                 "field_current_pu": field_current_pu,
-                "resistance_ohm": resistance_ohm,
+                "impedance_real_ohm": np.real(impedance_ohm),
+                "impedance_imag_ohm": np.imag(impedance_ohm),
+                "impedance_magnitude_ohm": np.abs(impedance_ohm),
+                "impedance_angle_deg": np.rad2deg(np.angle(impedance_ohm)),
                 "internal_voltage_ll_rms": terminal_quantities["internal_voltage_ll_rms"],
                 "terminal_voltage_ll_rms": terminal_quantities["terminal_voltage_ll_rms"],
                 "load_current_phase_rms": terminal_quantities["load_current_phase_rms"],
+                "load_current_angle_rad": terminal_quantities["load_current_angle_rad"],
                 "voltage_a_v": voltage_a_v,
                 "voltage_b_v": voltage_b_v,
                 "voltage_c_v": voltage_c_v,
