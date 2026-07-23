@@ -74,13 +74,13 @@ def build_slip_animation_frame_times(
     config: SimulationConfig,
     frame_count: int | None = None,
 ) -> FloatArray:
-    """Build frame times for the rotor-reference slip animation around load changes."""
+    """Build frame times for the full rotor-reference slip animation."""
     active_frame_count = frame_count if frame_count is not None else config.SLIP_ANIMATION_FRAME_COUNT
     if active_frame_count < 3:
         raise ValueError("Slip animation frame count must be at least 3.")
 
-    start_s = max(0.0, config.LOAD_STEP_TIME_S - config.SLIP_ANIMATION_PRE_STEP_TIME_S)
-    end_s = min(config.SIMULATION_TIME_S, config.LOAD_STEP_TIME_S + config.SLIP_ANIMATION_DURATION_S)
+    start_s = 0.0
+    end_s = config.SIMULATION_TIME_S
     if end_s <= start_s:
         raise ValueError("Slip animation time window is invalid.")
 

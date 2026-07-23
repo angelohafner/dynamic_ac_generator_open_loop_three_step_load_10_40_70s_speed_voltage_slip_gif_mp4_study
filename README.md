@@ -120,15 +120,14 @@ Default visual settings:
 
 ```text
 SLOW_MOTION_REFERENCE_FREQUENCY_HZ = 0.40
-SLIP_ANIMATION_PRE_STEP_TIME_S = 1.0
-SLIP_ANIMATION_DURATION_S = 90.0
 SLIP_ANIMATION_FRAME_COUNT = 1440
 SLIP_ANIMATION_FPS = 24
 ```
 
-Because the first load step occurs at `10 s`, the slow-motion animation frames
-start at `9 s` and end at `100 s`. That covers 1 s before the first step and
-90 s after it.
+The slow-motion animation frames now start at `0 s` and end at `100 s`. This
+shows the initial steady-state interval from `0 s` to `10 s` before the first
+load step, then continues through the load changes at `10 s`, `40 s`, and
+`70 s`.
 
 The chart x-axis uses absolute simulation time. Therefore the load-change
 markers appear at `10 s`, `40 s`, and `70 s` in the rendered MP4.
@@ -138,7 +137,7 @@ simulated time shown on the x-axis.
 Current timing convention:
 
 ```text
-animated frame time window                         = 9 s to 100 s
+animated frame time window                         = 0 s to 100 s
 fixed time-chart x-axis                            = 0 s to 100 s
 load-step markers shown on the chart             = 10 s, 40 s, 70 s
 rendered video duration                          = 60.125 s
@@ -418,7 +417,6 @@ When changing load-step timing, update:
 - `SimulationConfig.SECOND_LOAD_STEP_TIME_S`
 - `SimulationConfig.THIRD_LOAD_STEP_TIME_S`
 - `SimulationConfig.SIMULATION_TIME_S`
-- `SimulationConfig.SLIP_ANIMATION_DURATION_S`
 - tests in `tests/test_config.py`, `tests/test_load.py`, and `tests/test_animations.py`
 - this README
 - `PROJECT_CONTEXT.md`

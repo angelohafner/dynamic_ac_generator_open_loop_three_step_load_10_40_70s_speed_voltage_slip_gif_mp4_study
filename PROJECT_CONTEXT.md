@@ -121,21 +121,20 @@ Default animation settings:
 
 ```text
 SLOW_MOTION_REFERENCE_FREQUENCY_HZ = 0.40
-SLIP_ANIMATION_PRE_STEP_TIME_S = 1.0
-SLIP_ANIMATION_DURATION_S = 90.0
 SLIP_ANIMATION_FRAME_COUNT = 1440
 SLIP_ANIMATION_FPS = 24
 ```
 
-Because the first load step is at `10 s`, the slip animation frames start at
-`9 s` and end at `100 s`. That covers 1 s before the first step and 90 s after
-it. The chart x-axis uses absolute simulation time, so the rendered load-change
-markers appear at `10 s`, `40 s`, and `70 s`.
+The slip animation frames now start at `0 s` and end at `100 s`. This shows the
+initial steady-state interval from `0 s` to `10 s`, then continues through the
+load changes at `10 s`, `40 s`, and `70 s`. The chart x-axis uses absolute
+simulation time, so the rendered load-change markers appear at those exact
+times.
 
 Important timing distinction:
 
 ```text
-animated frame time window     = 9 s to 100 s
+animated frame time window     = 0 s to 100 s
 fixed time-chart x-axis        = 0 s to 100 s
 load steps shown on chart      = 10 s, 40 s, 70 s
 MP4 playback duration          = 60.125 s
@@ -317,7 +316,6 @@ When changing load-step timing, update:
 - `SimulationConfig.SECOND_LOAD_STEP_TIME_S`
 - `SimulationConfig.THIRD_LOAD_STEP_TIME_S`
 - `SimulationConfig.SIMULATION_TIME_S`
-- `SimulationConfig.SLIP_ANIMATION_DURATION_S`
 - tests in `tests/test_config.py`, `tests/test_load.py`, and `tests/test_animations.py`
 - `README.md`
 - `PROJECT_CONTEXT.md`

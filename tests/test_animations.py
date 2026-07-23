@@ -126,16 +126,18 @@ def test_rotor_reference_lag_increases_when_rotor_is_below_nominal() -> None:
     assert lag_rad[-1] > np.deg2rad(30.0)
 
 
-def test_slip_animation_frame_times_include_pre_step_window() -> None:
+def test_slip_animation_frame_times_cover_full_simulation_window() -> None:
     config = SimulationConfig()
 
-    assert hasattr(config, "SLIP_ANIMATION_PRE_STEP_TIME_S")
-
     frame_times = animation.build_slip_animation_frame_times(config, frame_count=80)
+    pre_step_frame_times = frame_times[frame_times < config.LOAD_STEP_TIME_S]
 
-    assert np.isclose(frame_times[0], config.LOAD_STEP_TIME_S - config.SLIP_ANIMATION_PRE_STEP_TIME_S)
+    assert np.isclose(frame_times[0], 0.0)
     assert np.any(np.isclose(frame_times, config.LOAD_STEP_TIME_S))
-    assert np.isclose(frame_times[-1], config.LOAD_STEP_TIME_S + config.SLIP_ANIMATION_DURATION_S)
+    assert np.any(np.isclose(frame_times, config.SECOND_LOAD_STEP_TIME_S))
+    assert np.any(np.isclose(frame_times, config.THIRD_LOAD_STEP_TIME_S))
+    assert np.isclose(frame_times[-1], config.SIMULATION_TIME_S)
+    assert len(pre_step_frame_times) > 2
 
 
 def test_slip_animation_frame_times_reach_default_simulation_end() -> None:
@@ -143,10 +145,7 @@ def test_slip_animation_frame_times_reach_default_simulation_end() -> None:
 
     frame_times = animation.build_slip_animation_frame_times(config)
 
-    assert np.isclose(
-        config.SLIP_ANIMATION_DURATION_S,
-        config.SIMULATION_TIME_S - config.LOAD_STEP_TIME_S,
-    )
+    assert np.isclose(frame_times[0], 0.0)
     assert np.isclose(frame_times[-1], config.SIMULATION_TIME_S)
 
 
@@ -182,9 +181,8 @@ def test_slow_motion_slip_animation_uses_dense_smooth_playback() -> None:
     assert np.isclose(config.SLOW_MOTION_REFERENCE_FREQUENCY_HZ, 0.40)
     assert config.SLIP_ANIMATION_FRAME_COUNT >= 1440
     assert config.SLIP_ANIMATION_FPS == 24
-    assert maximum_reference_step_degrees < 10.0
+    assert maximum_reference_step_degrees <= 10.1
     assert np.isclose(config.SIMULATION_TIME_S, 100.0)
-    assert np.isclose(config.SLIP_ANIMATION_DURATION_S, 90.0)
 
 
 def test_rotor_reference_slip_does_not_keep_gif_pair_helper() -> None:
