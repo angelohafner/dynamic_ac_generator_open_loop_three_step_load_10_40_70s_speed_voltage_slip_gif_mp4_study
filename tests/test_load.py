@@ -11,13 +11,13 @@ def test_impedance_load_returns_expected_magnitude_and_angle_before_and_after_st
     config = SimulationConfig()
     load = load_module.ImpedanceLoad(config)
 
-    assert math.isclose(load.impedance_magnitude_pu_at(9.0), 0.5, rel_tol=1e-12)
+    assert math.isclose(load.impedance_magnitude_pu_at(9.0), math.sqrt(2.0), rel_tol=1e-12)
     assert math.isclose(load.impedance_angle_deg_at(9.0), -45.0, rel_tol=1e-12)
-    assert math.isclose(load.impedance_magnitude_pu_at(10.0), 0.6, rel_tol=1e-12)
+    assert math.isclose(load.impedance_magnitude_pu_at(10.0), math.sqrt(3.0) / 2.0, rel_tol=1e-12)
     assert math.isclose(load.impedance_angle_deg_at(10.0), -30.0, rel_tol=1e-12)
-    assert math.isclose(load.impedance_magnitude_pu_at(40.0), 0.6, rel_tol=1e-12)
+    assert math.isclose(load.impedance_magnitude_pu_at(40.0), 0.625, rel_tol=1e-12)
     assert math.isclose(load.impedance_angle_deg_at(40.0), -60.0, rel_tol=1e-12)
-    assert math.isclose(load.impedance_magnitude_pu_at(70.0), 0.6, rel_tol=1e-12)
+    assert math.isclose(load.impedance_magnitude_pu_at(70.0), 0.625, rel_tol=1e-12)
     assert math.isclose(load.impedance_angle_deg_at(70.0), 60.0, rel_tol=1e-12)
 
 
@@ -36,14 +36,14 @@ def test_impedance_load_supports_array_inputs() -> None:
         np.abs(impedance_pu),
         np.array(
             [
-                0.5,
-                0.5,
-                0.6,
-                0.6,
-                0.6,
-                0.6,
-                0.6,
-                0.6,
+                math.sqrt(2.0),
+                math.sqrt(2.0),
+                math.sqrt(3.0) / 2.0,
+                math.sqrt(3.0) / 2.0,
+                0.625,
+                0.625,
+                0.625,
+                0.625,
             ],
             dtype=float,
         ),
@@ -73,9 +73,12 @@ def test_nominal_voltage_active_power_uses_complex_impedance_angle() -> None:
     config = SimulationConfig()
     load = load_module.ImpedanceLoad(config)
 
-    assert math.isclose(load.nominal_voltage_active_power_pu_at(0.0), math.sqrt(2.0), rel_tol=1e-12)
+    assert math.isclose(load.nominal_voltage_active_power_pu_at(0.0), 0.5, rel_tol=1e-12)
+    assert math.isclose(load.nominal_voltage_active_power_pu_at(10.0), 1.0, rel_tol=1e-12)
+    assert math.isclose(load.nominal_voltage_active_power_pu_at(40.0), 0.8, rel_tol=1e-12)
+    assert math.isclose(load.nominal_voltage_active_power_pu_at(70.0), 0.8, rel_tol=1e-12)
     assert math.isclose(
         load.nominal_voltage_reactive_power_pu_at(0.0),
-        -math.sqrt(2.0),
+        -0.5,
         rel_tol=1e-12,
     )

@@ -26,35 +26,50 @@ omega_pu(0) = 1.0
 V_terminal_LL_RMS(0) = 400 V
 If(0) = 1.0 pu
 Pm(0) = Pe(0)
-initial load impedance = 0.50 pu angle -45 deg
+initial load impedance = 1.4142135623730951 pu angle -45 deg
 ```
 
-The default load-impedance schedule is:
+The default load-impedance schedule is chosen from desired active power at
+nominal terminal voltage with fixed impedance angles:
 
 ```text
-t = 0 s:    Z_load = 0.50 pu angle -45 deg
-t = 10 s:   Z_load = 0.60 pu angle -30 deg
-t = 40 s:   Z_load = 0.60 pu angle -60 deg
-t = 70 s:   Z_load = 0.60 pu angle +60 deg
+P_pu = cos(phi_load) / |Z_load|_pu
+|Z_load|_pu = cos(phi_load) / P_pu
+```
+
+The resulting schedule is:
+
+```text
+t = 0 s:    P_target = 0.5 pu, Z_load = 1.4142135623730951 pu angle -45 deg
+t = 10 s:   P_target = 1.0 pu, Z_load = 0.8660254037844387 pu angle -30 deg
+t = 40 s:   P_target = 0.8 pu, Z_load = 0.625 pu angle -60 deg
+t = 70 s:   P_target = 0.8 pu, Z_load = 0.625 pu angle +60 deg
 t = 110 s:  end of simulation
 ```
 
 Interpretation:
 
 - `0 s` to `10 s`: steady at 60 Hz.
-- After `10 s`: active electrical power drops and the rotor accelerates.
-- After `40 s`: the lower-angle, moderate-magnitude impedance makes active electrical power larger than mechanical input at the reached speed, so the rotor decelerates.
-- After `70 s`: the load becomes inductive with `0.60 pu angle +60 deg`; active electrical power is below the constant mechanical input at the reached speed, so the rotor accelerates toward a much higher open-loop equilibrium.
-- By `110 s`: the frequency is close to the final theoretical open-loop equilibrium, about `173.48 Hz`; the numerical result is about `173.21 Hz`.
+- After `10 s`: the nominal-voltage active-power target rises to `1.0 pu`,
+  so electrical power is larger than the constant mechanical input and the
+  rotor decelerates.
+- After `40 s`: the nominal-voltage active-power target becomes `0.8 pu` at
+  `-60 deg`; at the reached speed the generator keeps decelerating.
+- After `70 s`: the magnitude stays at `0.625 pu`, but the angle changes to
+  `+60 deg`; active power falls below the constant mechanical input and the
+  rotor accelerates toward a higher open-loop equilibrium.
+- By `110 s`: the numerical frequency is about `101.02 Hz`, still approaching
+  the final theoretical open-loop equilibrium of about `103.28 Hz`; the
+  estimated settling time is about `121.27 s`.
 
 The per-phase impedance values in ohms are obtained from
 `Z_base = V_LL^2 / S_base = 1.6 ohm`:
 
 ```text
-0.50 pu angle -45 deg -> 0.80 ohm angle -45 deg -> 0.5657 - j0.5657 ohm
-0.60 pu angle -30 deg -> 0.96 ohm angle -30 deg -> 0.8314 - j0.4800 ohm
-0.60 pu angle -60 deg -> 0.96 ohm angle -60 deg -> 0.4800 - j0.8314 ohm
-0.60 pu angle +60 deg -> 0.96 ohm angle +60 deg -> 0.4800 + j0.8314 ohm
+1.4142135623730951 pu angle -45 deg -> 2.2627 ohm angle -45 deg -> 1.6000 - j1.6000 ohm
+0.8660254037844387 pu angle -30 deg -> 1.3856 ohm angle -30 deg -> 1.2000 - j0.6928 ohm
+0.625 pu angle -60 deg -> 1.0000 ohm angle -60 deg -> 0.5000 - j0.8660 ohm
+0.625 pu angle +60 deg -> 1.0000 ohm angle +60 deg -> 0.5000 + j0.8660 ohm
 ```
 
 The accumulated rotor-reference angle does not necessarily return to zero when
@@ -392,7 +407,7 @@ The tests cover:
 - open-loop field-current behavior
 - generated voltage proportional to field current and speed
 - terminal-voltage drop after the first impedance change
-- frequency acceleration, deceleration, and final acceleration toward the high-frequency open-loop equilibrium
+- frequency deceleration after the first two load changes and final acceleration toward the high-frequency open-loop equilibrium
 - open-loop equilibrium theory
 - damping comparison outputs
 - waveform consistency
@@ -407,10 +422,10 @@ The tests cover:
 After the default run, the expected qualitative behavior is:
 
 - `0 s` to `10 s`: steady at 60 Hz
-- after `10 s`: frequency increases because active electrical power drops
-- after `40 s`: frequency decreases because electrical power becomes larger than mechanical input
-- after `70 s`: frequency increases because the final `0.60 pu angle +60 deg` load consumes less active power than the constant mechanical input at the reached speed
-- by `110 s`: frequency is close to the final theoretical open-loop equilibrium, about `173.48 Hz`
+- after `10 s`: frequency decreases because the nominal-voltage active-power target rises to `1.0 pu`
+- after `40 s`: frequency keeps decreasing because electrical power remains larger than mechanical input at the reached speed
+- after `70 s`: frequency increases because the final `0.625 pu angle +60 deg` load consumes less active power than the constant mechanical input at the reached speed
+- by `110 s`: frequency reaches about `101.02 Hz`, approaching the final theoretical open-loop equilibrium of about `103.28 Hz`
 
 ## Notes For Codex
 

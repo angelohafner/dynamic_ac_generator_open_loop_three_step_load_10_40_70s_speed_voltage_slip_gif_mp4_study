@@ -81,6 +81,10 @@ def build_validation_report(
         abs(power_imbalance_pu) > 1e-9
         and power_imbalance_pu * measured_speed_derivative_pu_per_s > 0.0
     )
+    first_step_direction_consistent = (
+        abs(first_step_frequency_change_hz) > 0.01
+        and first_step_frequency_change_hz * power_imbalance_pu > 0.0
+    )
     second_step_frequency_change_hz = math.nan
     if results.config.CONTROL_MODE == "unregulated" and len(results.config.load_step_times_s) > 1:
         second_step_time_s = results.config.load_step_times_s[1]
@@ -149,8 +153,8 @@ def build_validation_report(
             "unit": "pu error",
         },
         {
-            "status": classify_check(first_step_frequency_change_hz > 0.01),
-            "check": "Frequency initially increases after the first impedance change",
+            "status": classify_check(first_step_direction_consistent),
+            "check": "Frequency initially follows the first impedance-change power imbalance",
             "value": first_step_frequency_change_hz,
             "unit": "Hz change",
         },

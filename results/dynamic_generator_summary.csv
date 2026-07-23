@@ -1,31 +1,31 @@
 metric,value,unit
 Nominal frequency,60.0,Hz
 Damping coefficient,0.0,pu
-Minimum frequency,52.04568611815049,Hz
-Maximum frequency,173.20807453350105,Hz
-Final frequency,173.20807453350105,Hz
-Theoretical final frequency,173.482758459935,Hz
-Open-loop frequency time constant,6.133541746298398,s
-Approximate open-loop settling time,103.68874421899017,s
-Maximum frequency deviation,113.20807453350105,Hz
+Minimum frequency,31.658328125178883,Hz
+Maximum frequency,101.02352676454613,Hz
+Final frequency,101.02352676454613,Hz
+Theoretical final frequency,103.27852131948445,Hz
+Open-loop frequency time constant,10.327852131948447,s
+Approximate open-loop settling time,121.27300989982294,s
+Maximum frequency deviation,41.02352676454613,Hz
 Time of minimum frequency,70.0,s
-Initial electrical power,1.4142135623730947,pu
-Final electrical power,1.4097387177011482,pu
-Initial mechanical power,1.4142135623730947,pu
-Final mechanical power,1.4142135623730947,pu
+Initial electrical power,0.4999999999999999,pu
+Final electrical power,0.4784042545603785,pu
+Initial mechanical power,0.49999999999999994,pu
+Final mechanical power,0.49999999999999994,pu
 Initial field current,1.0,pu
 Final field current,1.0,pu
-Initial internal voltage,320.98722220595107,V LL RMS
-Final internal voltage,926.6263118024973,V LL RMS
+Initial internal voltage,321.29737004837125,V LL RMS
+Final internal voltage,540.9765577076653,V LL RMS
 Initial terminal voltage,400.0,V LL RMS
-Final terminal voltage,520.2593908797998,V LL RMS
-Initial load current,288.67513459481285,A phase RMS
-Final load current,312.8873951800866,A phase RMS
-Initial reactive power,-1.4142135623730947,pu
-Final reactive power,2.441739084455387,pu
-Initial load impedance magnitude,0.8000000000000002,ohm
+Final terminal voltage,309.3232143116253,V LL RMS
+Initial load current,102.06207261596572,A phase RMS
+Final load current,178.58784104941716,A phase RMS
+Initial reactive power,-0.4999999999999999,pu
+Final reactive power,0.8286204754556903,pu
+Initial load impedance magnitude,2.262741699796953,ohm
 Initial load impedance angle,-45.0,deg
-Final load impedance magnitude,0.9600000000000002,ohm
+Final load impedance magnitude,1.0,ohm
 Final load impedance angle,59.99999999999999,deg
-Settling time,106.32300000000001,s
-Steady-state frequency error,-113.20807453350105,Hz
+Settling time,Not reached in simulation window,s
+Steady-state frequency error,-41.02352676454613,Hz

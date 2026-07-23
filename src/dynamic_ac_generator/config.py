@@ -32,15 +32,15 @@ class SimulationConfig:
     P_M_MIN_PU: float = 0.0
     P_M_MAX_PU: float = 3.0
 
-    INITIAL_LOAD_PU: float = 0.50
+    INITIAL_LOAD_PU: float = 1.4142135623730951
     INITIAL_LOAD_ANGLE_DEG: float = -45.0
-    FINAL_LOAD_PU: float = 0.60
+    FINAL_LOAD_PU: float = 0.8660254037844387
     FINAL_LOAD_ANGLE_DEG: float = -30.0
     SECOND_LOAD_STEP_TIME_S: float | None = 40.0
-    SECOND_STEP_LOAD_PU: float | None = 0.60
+    SECOND_STEP_LOAD_PU: float | None = 0.625
     SECOND_STEP_LOAD_ANGLE_DEG: float | None = -60.0
     THIRD_LOAD_STEP_TIME_S: float | None = 70.0
-    THIRD_STEP_LOAD_PU: float | None = 0.60
+    THIRD_STEP_LOAD_PU: float | None = 0.625
     THIRD_STEP_LOAD_ANGLE_DEG: float | None = 60.0
     ADDITIONAL_LOAD_STEPS: tuple[tuple[float, float, float], ...] | None = None
 
@@ -68,8 +68,8 @@ class SimulationConfig:
     SLIP_ANIMATION_FRAME_COUNT: int = 1680
     SLIP_ANIMATION_FPS: int = 24
 
-    RELATIVE_TOLERANCE: float = 1e-9
-    ABSOLUTE_TOLERANCE: float = 1e-11
+    RELATIVE_TOLERANCE: float = 1e-6
+    ABSOLUTE_TOLERANCE: float = 1e-6
 
     def __post_init__(self) -> None:
         """Validate configuration values with clear error messages."""

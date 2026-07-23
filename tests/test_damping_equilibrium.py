@@ -7,13 +7,13 @@ from dynamic_ac_generator.runner import run_complete_simulation
 from dynamic_ac_generator.simulation import DynamicSimulation
 
 
-def test_undamped_speed_coupled_voltage_case_has_higher_frequency_equilibrium() -> None:
+def test_undamped_speed_coupled_voltage_case_has_lower_first_step_frequency_equilibrium() -> None:
     config = SimulationConfig(CONTROL_MODE="unregulated", D=0.0, ADDITIONAL_LOAD_STEPS=())
 
     theory = calculate_unregulated_frequency_theory(config)
 
     assert theory.has_finite_equilibrium
-    assert theory.final_frequency_hz > config.F_NOM_HZ
+    assert theory.final_frequency_hz < config.F_NOM_HZ
     assert math.isclose(
         theory.electrical_power_pu,
         theory.mechanical_power_pu,
@@ -31,7 +31,7 @@ def test_damped_unregulated_theory_predicts_lower_stable_frequency() -> None:
 
     assert theory.has_finite_equilibrium
     assert math.isclose(theory.final_frequency_hz, expected_final_frequency_hz, abs_tol=1e-9)
-    assert theory.final_frequency_hz > config.F_NOM_HZ
+    assert theory.final_frequency_hz < config.F_NOM_HZ
     assert 0.0 < theory.time_constant_s < 3.0
     assert theory.settling_time_s > config.LOAD_STEP_TIME_S
     assert theory.settling_time_after_step_s < 5.0
@@ -74,14 +74,13 @@ def test_undamped_speed_coupled_voltage_simulation_converges_to_theoretical_freq
     assert math.isclose(results.electrical_power_pu[-1], results.mechanical_power_pu[-1], abs_tol=0.01)
 
 
-def test_default_speed_coupled_case_reports_finite_settling_time() -> None:
+def test_default_speed_coupled_case_reports_unreached_settling_time_inside_window() -> None:
     config = SimulationConfig(CONTROL_MODE="unregulated", D=0.0)
     results = DynamicSimulation(config).run()
 
     settling_time_s = calculate_settling_time(results)
 
-    assert settling_time_s > config.LOAD_STEP_TIME_S
-    assert settling_time_s < config.SIMULATION_TIME_S
+    assert math.isnan(settling_time_s)
 
 
 def test_default_three_step_case_predicts_high_frequency_equilibrium() -> None:
@@ -90,9 +89,9 @@ def test_default_three_step_case_predicts_high_frequency_equilibrium() -> None:
     theory = calculate_unregulated_frequency_theory(config)
 
     assert theory.has_finite_equilibrium
-    assert theory.final_frequency_hz > config.F_NOM_HZ + 100.0
+    assert theory.final_frequency_hz > config.F_NOM_HZ + 40.0
     assert theory.settling_time_s > config.THIRD_LOAD_STEP_TIME_S
-    assert theory.settling_time_s < config.SIMULATION_TIME_S
+    assert theory.settling_time_s > config.SIMULATION_TIME_S
 
 
 def test_damping_comparison_contains_undamped_and_damped_frequency_columns() -> None:

@@ -26,32 +26,47 @@ f(0) = 60 Hz
 omega_pu(0) = 1.0
 V_terminal_LL_RMS(0) = 400 V
 If(0) = 1.0 pu
-initial load impedance = 0.50 pu angle -45 deg
+initial load impedance = 1.4142135623730951 pu angle -45 deg
 Pm(0) = Pe(0)
 ```
 
-Default load-impedance schedule:
+Default load-impedance schedule, chosen from desired active power at nominal
+terminal voltage with fixed impedance angles:
 
 ```text
-t = 0 s:    Z_load = 0.50 pu angle -45 deg
-t = 10 s:   Z_load = 0.60 pu angle -30 deg
-t = 40 s:   Z_load = 0.60 pu angle -60 deg
-t = 70 s:   Z_load = 0.60 pu angle +60 deg
+P_pu = cos(phi_load) / |Z_load|_pu
+|Z_load|_pu = cos(phi_load) / P_pu
+```
+
+Resulting schedule:
+
+```text
+t = 0 s:    P_target = 0.5 pu, Z_load = 1.4142135623730951 pu angle -45 deg
+t = 10 s:   P_target = 1.0 pu, Z_load = 0.8660254037844387 pu angle -30 deg
+t = 40 s:   P_target = 0.8 pu, Z_load = 0.625 pu angle -60 deg
+t = 70 s:   P_target = 0.8 pu, Z_load = 0.625 pu angle +60 deg
 t = 110 s:  end of simulation
 ```
 
-The first impedance step reduces active electrical power and makes the rotor
-accelerate. The second impedance step makes active electrical power larger than
-the constant mechanical input at the reached speed, so the rotor decelerates.
-The third load step changes the load to `0.60 pu angle +60 deg`; at the reached
-speed, active electrical power is lower than the constant mechanical input, so
-the rotor accelerates toward a high open-loop equilibrium.
+The first impedance step raises the nominal-voltage active-power target to
+`1.0 pu`, so active electrical power is larger than the constant mechanical
+input and the rotor decelerates. The second impedance step keeps the rotor
+decelerating. The third load step keeps the magnitude at `0.625 pu` but changes
+the angle to `+60 deg`; at the reached speed, active electrical power becomes
+lower than mechanical input, so the rotor accelerates toward a high open-loop
+equilibrium.
 
 With `Z_base = V_LL^2 / S_base = 1.6 ohm`, the four per-phase impedance
-magnitudes are `0.80 ohm`, `0.96 ohm`, `0.96 ohm`, and `0.96 ohm`.
-The rectangular values are approximately `0.5657 - j0.5657 ohm`,
-`0.8314 - j0.4800 ohm`, `0.4800 - j0.8314 ohm`, and
-`0.4800 + j0.8314 ohm`.
+magnitudes are `2.2627 ohm`, `1.3856 ohm`, `1.0000 ohm`, and `1.0000 ohm`.
+The rectangular values are approximately `1.6000 - j1.6000 ohm`,
+`1.2000 - j0.6928 ohm`, `0.5000 - j0.8660 ohm`, and
+`0.5000 + j0.8660 ohm`.
+
+The current regenerated run reaches about `101.02 Hz` at `110 s`, while the
+open-loop equilibrium theory predicts about `103.28 Hz`. The estimated settling
+time is about `121.27 s`, so the validation report intentionally contains one
+warning that the final frequency has not fully reached the theoretical
+equilibrium inside the current simulation window.
 
 The accumulated rotor-reference angle does not have to return to zero when the
 frequency reaches the final equilibrium. It is an integral of all previous
@@ -301,7 +316,7 @@ The open-loop validation checks that:
 
 - initial frequency is approximately 60 Hz
 - initial mechanical and electrical powers are equal
-- frequency initially increases after the first impedance change
+- frequency initially follows the first impedance-change power imbalance
 - mechanical power remains constant without a speed regulator
 - initial terminal voltage is nominal
 - field current remains constant without AVR
