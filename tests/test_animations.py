@@ -260,6 +260,13 @@ def test_rotor_reference_slip_uses_latex_axis_labels_and_dashed_references() -> 
     assert "save_mp4=True" in source
 
 
+def test_rotor_reference_slip_uses_absolute_simulation_time_axis() -> None:
+    source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
+
+    assert "relative_frame_times_s = active_frame_times_s - config.LOAD_STEP_TIME_S" not in source
+    assert 'set_xlabel("Simulation time (s)")' in source
+
+
 def test_lag_sector_alpha_starts_at_20_percent_and_increases_by_cycles() -> None:
     assert hasattr(animation, "calculate_lag_sector_alpha")
 

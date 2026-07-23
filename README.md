@@ -130,6 +130,9 @@ Because the first load step occurs at `10 s`, the slow-motion animation starts
 at `9 s` and ends at `100 s`. That covers 1 s before the first step and 90 s
 after it.
 
+The chart x-axis uses absolute simulation time. Therefore the load-change
+markers appear at `10 s`, `40 s`, and `70 s` in the rendered GIF and MP4.
+
 The synchronized `06_rotor_reference_slip` animation contains:
 
 - a slow reference vector and a rotor vector

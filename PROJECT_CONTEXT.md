@@ -129,6 +129,8 @@ SLIP_ANIMATION_FPS = 24
 
 Because the first load step is at `10 s`, the slip animation starts at `9 s`
 and ends at `100 s`. That covers 1 s before the first step and 90 s after it.
+The chart x-axis uses absolute simulation time, so the rendered load-change
+markers appear at `10 s`, `40 s`, and `70 s`.
 
 The `06_rotor_reference_slip` animation is a synchronized multi-panel figure:
 

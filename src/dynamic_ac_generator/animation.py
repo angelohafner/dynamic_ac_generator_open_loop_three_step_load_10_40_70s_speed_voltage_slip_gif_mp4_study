@@ -954,7 +954,7 @@ def generate_rotor_reference_slip_animation(
     active_frame_times_s = (
         frame_times_s if frame_times_s is not None else build_slip_animation_frame_times(config)
     )
-    relative_frame_times_s = active_frame_times_s - config.LOAD_STEP_TIME_S
+    animation_time_s = active_frame_times_s
     frame_frequency_hz = _interpolate(results.frequency_hz, results.time_s, active_frame_times_s)
     frame_terminal_voltage_v = _interpolate(
         results.terminal_voltage_ll_rms,
@@ -1037,7 +1037,7 @@ def generate_rotor_reference_slip_animation(
     _fixed_legend(rotor_axis, "lower left")
 
     frequency_axis.plot(
-        relative_frame_times_s,
+        animation_time_s,
         frame_frequency_hz,
         alpha=0.25,
         label="_Full frequency",
@@ -1050,7 +1050,7 @@ def generate_rotor_reference_slip_animation(
     _fixed_legend(frequency_axis, "upper right")
 
     voltage_axis.plot(
-        relative_frame_times_s,
+        animation_time_s,
         frame_terminal_voltage_v,
         alpha=0.25,
         label="_Full terminal voltage",
@@ -1063,13 +1063,13 @@ def generate_rotor_reference_slip_animation(
     _fixed_legend(voltage_axis, "upper right")
 
     power_axis.plot(
-        relative_frame_times_s,
+        animation_time_s,
         frame_mechanical_power_pu,
         alpha=0.25,
         label="_Full mechanical power",
     )
     power_axis.plot(
-        relative_frame_times_s,
+        animation_time_s,
         frame_electrical_power_pu,
         alpha=0.25,
         label="_Full electrical power",
@@ -1082,7 +1082,7 @@ def generate_rotor_reference_slip_animation(
     _fixed_legend(power_axis, "upper right")
 
     internal_voltage_axis.plot(
-        relative_frame_times_s,
+        animation_time_s,
         frame_internal_voltage_v,
         alpha=0.25,
         label="_Full internal voltage",
@@ -1094,7 +1094,7 @@ def generate_rotor_reference_slip_animation(
     _fixed_legend(internal_voltage_axis, "upper right")
 
     lead_axis.plot(
-        relative_frame_times_s,
+        animation_time_s,
         lead_cycles,
         alpha=0.25,
         label="_Full reference lead",
@@ -1103,7 +1103,7 @@ def generate_rotor_reference_slip_animation(
     lead_axis.axhline(0.0, linestyle="--", label="Zero lag")
     lead_axis.set_title("Accumulated Rotor Lag")
     lead_axis.set_ylabel("Lead (slow-motion cycles)")
-    lead_axis.set_xlabel("Time relative to load step (s)")
+    lead_axis.set_xlabel("Simulation time (s)")
     _enable_grid(lead_axis)
     _fixed_legend(lead_axis, "upper left")
 
@@ -1119,8 +1119,8 @@ def generate_rotor_reference_slip_animation(
         for axis in chart_axes
     ]
     for axis in chart_axes:
-        _add_load_step_markers(axis, config, reference_time_s=config.LOAD_STEP_TIME_S)
-        axis.set_xlim(relative_frame_times_s[0], relative_frame_times_s[-1])
+        _add_load_step_markers(axis, config)
+        axis.set_xlim(animation_time_s[0], animation_time_s[-1])
     _fixed_legend(frequency_axis, "upper right")
     _fixed_legend(voltage_axis, "upper right")
     _fixed_legend(power_axis, "upper right")
@@ -1144,7 +1144,7 @@ def generate_rotor_reference_slip_animation(
 
     def update(frame_index: int) -> list[object]:
         current_slice = slice(0, frame_index + 1)
-        current_time_s = relative_frame_times_s[frame_index]
+        current_time_s = animation_time_s[frame_index]
         current_reference_angle_rad = float(reference_angle_rad[frame_index])
         current_rotor_angle_rad = float(rotor_angle_rad[frame_index])
         current_sector_x_values, current_sector_y_values = calculate_lag_sector_points(
@@ -1167,27 +1167,27 @@ def generate_rotor_reference_slip_animation(
             f"Lead = {lead_cycles[frame_index]:+.2f} cycles\nFull turns = {completed_turns}"
         )
         frequency_line.set_data(
-            relative_frame_times_s[current_slice],
+            animation_time_s[current_slice],
             frame_frequency_hz[current_slice],
         )
         voltage_line.set_data(
-            relative_frame_times_s[current_slice],
+            animation_time_s[current_slice],
             frame_terminal_voltage_v[current_slice],
         )
         mechanical_power_line.set_data(
-            relative_frame_times_s[current_slice],
+            animation_time_s[current_slice],
             frame_mechanical_power_pu[current_slice],
         )
         electrical_power_line.set_data(
-            relative_frame_times_s[current_slice],
+            animation_time_s[current_slice],
             frame_electrical_power_pu[current_slice],
         )
         internal_voltage_line.set_data(
-            relative_frame_times_s[current_slice],
+            animation_time_s[current_slice],
             frame_internal_voltage_v[current_slice],
         )
         lead_line.set_data(
-            relative_frame_times_s[current_slice],
+            animation_time_s[current_slice],
             lead_cycles[current_slice],
         )
         for marker in current_markers:
