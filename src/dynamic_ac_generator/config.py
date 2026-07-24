@@ -38,11 +38,11 @@ class SimulationConfig:
     FINAL_LOAD_PU: float = 1.0
     FINAL_LOAD_ANGLE_DEG: float = -30.0
     SECOND_LOAD_STEP_TIME_S: float | None = 40.0
-    SECOND_STEP_LOAD_PU: float | None = 0.8
-    SECOND_STEP_LOAD_ANGLE_DEG: float | None = -60.0
+    SECOND_STEP_LOAD_PU: float | None = 0.6
+    SECOND_STEP_LOAD_ANGLE_DEG: float | None = -10.0
     THIRD_LOAD_STEP_TIME_S: float | None = 70.0
-    THIRD_STEP_LOAD_PU: float | None = 0.8
-    THIRD_STEP_LOAD_ANGLE_DEG: float | None = 60.0
+    THIRD_STEP_LOAD_PU: float | None = 0.6
+    THIRD_STEP_LOAD_ANGLE_DEG: float | None = 10.0
     ADDITIONAL_LOAD_STEPS: tuple[tuple[float, float, float], ...] | None = None
 
     LOAD_STEP_TIME_S: float = 10.0

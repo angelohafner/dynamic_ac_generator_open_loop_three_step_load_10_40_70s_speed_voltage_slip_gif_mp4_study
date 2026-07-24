@@ -4,6 +4,7 @@ import numpy as np
 
 from dynamic_ac_generator import load as load_module
 from dynamic_ac_generator.config import SimulationConfig
+from dynamic_ac_generator.damping import calculate_unregulated_frequency_theory
 from dynamic_ac_generator.electrical import TerminalElectricalModel
 from dynamic_ac_generator.excitation import OpenLoopExcitationModel
 from dynamic_ac_generator.runner import run_complete_simulation
@@ -61,7 +62,13 @@ def test_open_loop_load_step_changes_voltage_with_constant_field_current() -> No
         results.omega_pu[-1],
         rel_tol=1e-9,
     )
-    assert results.frequency_hz[-1] > config.F_NOM_HZ + 40.0
+    theory = calculate_unregulated_frequency_theory(config)
+    assert results.frequency_hz[-1] > config.F_NOM_HZ + 10.0
+    assert math.isclose(
+        results.frequency_hz[-1],
+        theory.final_frequency_hz,
+        abs_tol=config.DAMPING_SETTLING_TOLERANCE_HZ,
+    )
     assert results.electrical_power_pu[step_index + 1] > results.electrical_power_pu[0]
     assert results.reactive_power_pu[step_index + 1] < 0.0
 

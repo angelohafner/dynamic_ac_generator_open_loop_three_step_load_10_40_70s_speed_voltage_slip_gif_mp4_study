@@ -16,17 +16,17 @@ def test_parallel_admittance_load_returns_expected_power_and_admittance_steps() 
     assert math.isclose(load.load_angle_deg_at(9.0), -45.0, rel_tol=1e-12)
     assert math.isclose(load.load_value_pu_at(10.0), 1.0, rel_tol=1e-12)
     assert math.isclose(load.load_angle_deg_at(10.0), -30.0, rel_tol=1e-12)
-    assert math.isclose(load.load_value_pu_at(40.0), 0.8, rel_tol=1e-12)
-    assert math.isclose(load.load_angle_deg_at(40.0), -60.0, rel_tol=1e-12)
-    assert math.isclose(load.load_value_pu_at(70.0), 0.8, rel_tol=1e-12)
-    assert math.isclose(load.load_angle_deg_at(70.0), 60.0, rel_tol=1e-12)
+    assert math.isclose(load.load_value_pu_at(40.0), 0.6, rel_tol=1e-12)
+    assert math.isclose(load.load_angle_deg_at(40.0), -10.0, rel_tol=1e-12)
+    assert math.isclose(load.load_value_pu_at(70.0), 0.6, rel_tol=1e-12)
+    assert math.isclose(load.load_angle_deg_at(70.0), 10.0, rel_tol=1e-12)
 
     initial_admittance = load.admittance_pu_at(9.0)
     final_admittance = load.admittance_pu_at(70.0)
     assert math.isclose(initial_admittance.real, 0.5, rel_tol=1e-12)
     assert math.isclose(initial_admittance.imag, 0.5, rel_tol=1e-12)
-    assert math.isclose(final_admittance.real, 0.8, rel_tol=1e-12)
-    assert math.isclose(final_admittance.imag, -0.8 * math.tan(math.radians(60.0)), rel_tol=1e-12)
+    assert math.isclose(final_admittance.real, 0.6, rel_tol=1e-12)
+    assert math.isclose(final_admittance.imag, -0.6 * math.tan(math.radians(10.0)), rel_tol=1e-12)
     assert load.susceptance_pu_at(9.0) > 0.0
     assert load.susceptance_pu_at(70.0) < 0.0
 
@@ -52,10 +52,10 @@ def test_parallel_admittance_load_supports_array_inputs_and_equivalent_impedance
                 0.5,
                 1.0,
                 1.0,
-                0.8,
-                0.8,
-                0.8,
-                0.8,
+                0.6,
+                0.6,
+                0.6,
+                0.6,
             ],
             dtype=float,
         ),
@@ -68,10 +68,10 @@ def test_parallel_admittance_load_supports_array_inputs_and_equivalent_impedance
                 -45.0,
                 -30.0,
                 -30.0,
-                -60.0,
-                -60.0,
-                60.0,
-                60.0,
+                -10.0,
+                -10.0,
+                10.0,
+                10.0,
             ],
             dtype=float,
         ),
@@ -88,8 +88,8 @@ def test_nominal_voltage_active_power_uses_complex_impedance_angle() -> None:
 
     assert math.isclose(load.nominal_voltage_active_power_pu_at(0.0), 0.5, rel_tol=1e-12)
     assert math.isclose(load.nominal_voltage_active_power_pu_at(10.0), 1.0, rel_tol=1e-12)
-    assert math.isclose(load.nominal_voltage_active_power_pu_at(40.0), 0.8, rel_tol=1e-12)
-    assert math.isclose(load.nominal_voltage_active_power_pu_at(70.0), 0.8, rel_tol=1e-12)
+    assert math.isclose(load.nominal_voltage_active_power_pu_at(40.0), 0.6, rel_tol=1e-12)
+    assert math.isclose(load.nominal_voltage_active_power_pu_at(70.0), 0.6, rel_tol=1e-12)
     assert math.isclose(
         load.nominal_voltage_reactive_power_pu_at(0.0),
         -0.5,

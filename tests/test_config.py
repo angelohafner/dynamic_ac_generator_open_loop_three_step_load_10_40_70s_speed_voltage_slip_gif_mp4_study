@@ -11,8 +11,8 @@ def test_default_config_uses_parallel_admittance_power_steps() -> None:
     expected_schedule = (
         (0.0, 0.5, -45.0),
         (10.0, 1.0, -30.0),
-        (40.0, 0.8, -60.0),
-        (70.0, 0.8, 60.0),
+        (40.0, 0.6, -10.0),
+        (70.0, 0.6, 10.0),
     )
 
     assert config.CONTROL_MODE == "unregulated"
@@ -23,15 +23,15 @@ def test_default_config_uses_parallel_admittance_power_steps() -> None:
     assert config.load_schedule == expected_schedule
     assert config.load_step_times_s == (10.0, 40.0, 70.0)
     assert math.isclose(config.initial_active_power_pu, 0.5, rel_tol=1e-12)
-    assert math.isclose(config.final_active_power_pu, 0.8, rel_tol=1e-12)
+    assert math.isclose(config.final_active_power_pu, 0.6, rel_tol=1e-12)
     assert math.isclose(config.initial_admittance_pu.real, 0.5, rel_tol=1e-12)
     assert math.isclose(config.initial_admittance_pu.imag, 0.5, rel_tol=1e-12)
-    assert math.isclose(config.final_admittance_pu.real, 0.8, rel_tol=1e-12)
-    assert math.isclose(config.final_admittance_pu.imag, -0.8 * math.tan(math.radians(60.0)), rel_tol=1e-12)
+    assert math.isclose(config.final_admittance_pu.real, 0.6, rel_tol=1e-12)
+    assert math.isclose(config.final_admittance_pu.imag, -0.6 * math.tan(math.radians(10.0)), rel_tol=1e-12)
     assert math.isclose(abs(config.initial_impedance_ohm), config.impedance_base_ohm / abs(config.initial_admittance_pu), rel_tol=1e-12)
     assert math.isclose(
         math.degrees(math.atan2(config.final_impedance_ohm.imag, config.final_impedance_ohm.real)),
-        60.0,
+        10.0,
         rel_tol=1e-12,
     )
 

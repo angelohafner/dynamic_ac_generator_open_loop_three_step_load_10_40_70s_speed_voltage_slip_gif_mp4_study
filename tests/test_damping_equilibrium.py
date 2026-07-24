@@ -74,24 +74,25 @@ def test_undamped_speed_coupled_voltage_simulation_converges_to_theoretical_freq
     assert math.isclose(results.electrical_power_pu[-1], results.mechanical_power_pu[-1], abs_tol=0.01)
 
 
-def test_default_speed_coupled_case_reports_unreached_settling_time_inside_window() -> None:
+def test_default_speed_coupled_case_reports_reached_settling_time_inside_window() -> None:
     config = SimulationConfig(CONTROL_MODE="unregulated", D=0.0)
     results = DynamicSimulation(config).run()
 
     settling_time_s = calculate_settling_time(results)
 
-    assert math.isnan(settling_time_s)
+    assert math.isfinite(settling_time_s)
+    assert config.THIRD_LOAD_STEP_TIME_S < settling_time_s < config.SIMULATION_TIME_S
 
 
-def test_default_three_step_case_predicts_high_frequency_equilibrium() -> None:
+def test_default_three_step_case_predicts_moderate_high_frequency_equilibrium() -> None:
     config = SimulationConfig(CONTROL_MODE="unregulated", D=0.0)
 
     theory = calculate_unregulated_frequency_theory(config)
 
     assert theory.has_finite_equilibrium
-    assert theory.final_frequency_hz > config.F_NOM_HZ + 40.0
+    assert math.isclose(theory.final_frequency_hz, 75.401679285, abs_tol=1e-6)
     assert theory.settling_time_s > config.THIRD_LOAD_STEP_TIME_S
-    assert theory.settling_time_s > config.SIMULATION_TIME_S
+    assert theory.settling_time_s < config.SIMULATION_TIME_S
 
 
 def test_damping_comparison_contains_undamped_and_damped_frequency_columns() -> None:

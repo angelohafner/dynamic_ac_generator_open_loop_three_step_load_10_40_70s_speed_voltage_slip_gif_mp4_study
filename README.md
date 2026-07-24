@@ -62,8 +62,8 @@ The resulting schedule is:
 |---:|---:|---:|---:|
 | `0 s` | `P = 0.5 pu`, `phi = -45 deg` | `0.5 + j0.5 pu` | `1.4142135624 pu angle -45 deg` |
 | `10 s` | `P = 1.0 pu`, `phi = -30 deg` | `1.0 + j0.5773502692 pu` | `0.8660254038 pu angle -30 deg` |
-| `40 s` | `P = 0.8 pu`, `phi = -60 deg` | `0.8 + j1.3856406461 pu` | `0.625 pu angle -60 deg` |
-| `70 s` | `P = 0.8 pu`, `phi = +60 deg` | `0.8 - j1.3856406461 pu` | `0.625 pu angle +60 deg` |
+| `40 s` | `P = 0.6 pu`, `phi = -10 deg` | `0.6 + j0.1057961884 pu` | `1.6413462550 pu angle -10 deg` |
+| `70 s` | `P = 0.6 pu`, `phi = +10 deg` | `0.6 - j0.1057961884 pu` | `1.6413462550 pu angle +10 deg` |
 | `110 s` | end of simulation | unchanged from `70 s` | unchanged from `70 s` |
 
 The optional compatibility mode is:
@@ -81,15 +81,15 @@ Interpretation:
 - After `10 s`: the nominal-voltage active-power target rises to `1.0 pu`,
   so electrical power is larger than the constant mechanical input and the
   rotor decelerates.
-- After `40 s`: the nominal-voltage active-power target becomes `0.8 pu` at
-  `-60 deg`; at the reached speed the generator keeps decelerating.
-- After `70 s`: the active-power target stays at `0.8 pu`, but the angle changes
-  to `+60 deg`; at the reached speed the electrical active power falls below
-  the constant mechanical input and the rotor accelerates toward a higher
-  open-loop equilibrium.
-- By `110 s`: the numerical frequency is about `101.02 Hz`, still approaching
-  the final theoretical open-loop equilibrium of about `103.28 Hz`; the
-  estimated settling time is about `121.27 s`.
+- After `40 s`: the nominal-voltage active-power target becomes `0.6 pu` at
+  `-10 deg`; at the reached speed the electrical active power is below the
+  constant mechanical input, so the rotor accelerates toward about `68.57 Hz`.
+- After `70 s`: the active-power target stays at `0.6 pu`, but the angle changes
+  to `+10 deg`; the inductive angle lowers the nominal-speed active-power
+  coefficient and the rotor accelerates toward about `75.40 Hz`.
+- By `110 s`: the numerical frequency is about `75.36 Hz`, essentially at the
+  final theoretical open-loop equilibrium of about `75.40 Hz`; the estimated
+  settling time is about `89.72 s`.
 
 The equivalent per-phase impedance values in ohms are obtained from
 `Z_base = V_LL^2 / S_base = 1.6 ohm`:
@@ -97,8 +97,8 @@ The equivalent per-phase impedance values in ohms are obtained from
 ```text
 1.4142135623730951 pu angle -45 deg -> 2.2627 ohm angle -45 deg -> 1.6000 - j1.6000 ohm
 0.8660254037844387 pu angle -30 deg -> 1.3856 ohm angle -30 deg -> 1.2000 - j0.6928 ohm
-0.625 pu angle -60 deg -> 1.0000 ohm angle -60 deg -> 0.5000 - j0.8660 ohm
-0.625 pu angle +60 deg -> 1.0000 ohm angle +60 deg -> 0.5000 + j0.8660 ohm
+1.6413462550 pu angle -10 deg -> 2.6262 ohm angle -10 deg -> 2.5863 - j0.4560 ohm
+1.6413462550 pu angle +10 deg -> 2.6262 ohm angle +10 deg -> 2.5863 + j0.4560 ohm
 ```
 
 The accumulated rotor-reference angle does not necessarily return to zero when
@@ -387,6 +387,7 @@ Main animation:
 
 ```text
 results/animations/06_rotor_reference_slip.mp4
+D:/dynamic_ac_generator_open_loop_three_step_load_10_40_70s_speed_voltage_slip_gif_mp4_study/results/animations/06_rotor_reference_slip.mp4
 ```
 
 The default animation workflow renders only
@@ -455,7 +456,7 @@ The tests cover:
 - open-loop field-current behavior
 - generated voltage proportional to field current and speed
 - terminal-voltage drop after the first load change
-- frequency deceleration after the first two load changes and final acceleration toward the high-frequency open-loop equilibrium
+- frequency response follows the active-power imbalance after each load change
 - open-loop equilibrium theory
 - damping comparison outputs
 - waveform consistency
@@ -471,9 +472,9 @@ After the default run, the expected qualitative behavior is:
 
 - `0 s` to `10 s`: steady at 60 Hz
 - after `10 s`: frequency decreases because the nominal-voltage active-power target rises to `1.0 pu`
-- after `40 s`: frequency keeps decreasing because electrical power remains larger than mechanical input at the reached speed
-- after `70 s`: frequency increases because the final `P = 0.8 pu`, `phi = +60 deg` load consumes less active power than the constant mechanical input at the reached speed
-- by `110 s`: frequency reaches about `101.02 Hz`, approaching the final theoretical open-loop equilibrium of about `103.28 Hz`
+- after `40 s`: frequency reaches its minimum near `47.16 Hz`, then accelerates because the `P = 0.6 pu`, `phi = -10 deg` load consumes less active power than the constant mechanical input at that speed
+- after `70 s`: frequency is about `68.25 Hz`; the final `P = 0.6 pu`, `phi = +10 deg` load keeps the rotor accelerating toward the new equilibrium
+- by `110 s`: frequency reaches about `75.36 Hz`, matching the final theoretical open-loop equilibrium of about `75.40 Hz`
 
 ## Notes For Codex
 

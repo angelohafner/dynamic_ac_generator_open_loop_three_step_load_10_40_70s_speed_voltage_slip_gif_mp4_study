@@ -47,8 +47,8 @@ Resulting schedule:
 |---:|---:|---:|---:|
 | `0 s` | `P = 0.5 pu`, `phi = -45 deg` | `0.5 + j0.5 pu` | `1.4142135624 pu angle -45 deg` |
 | `10 s` | `P = 1.0 pu`, `phi = -30 deg` | `1.0 + j0.5773502692 pu` | `0.8660254038 pu angle -30 deg` |
-| `40 s` | `P = 0.8 pu`, `phi = -60 deg` | `0.8 + j1.3856406461 pu` | `0.625 pu angle -60 deg` |
-| `70 s` | `P = 0.8 pu`, `phi = +60 deg` | `0.8 - j1.3856406461 pu` | `0.625 pu angle +60 deg` |
+| `40 s` | `P = 0.6 pu`, `phi = -10 deg` | `0.6 + j0.1057961884 pu` | `1.6413462550 pu angle -10 deg` |
+| `70 s` | `P = 0.6 pu`, `phi = +10 deg` | `0.6 - j0.1057961884 pu` | `1.6413462550 pu angle +10 deg` |
 | `110 s` | end of simulation | unchanged from `70 s` | unchanged from `70 s` |
 
 Sign convention:
@@ -60,22 +60,24 @@ phi_load > 0 deg -> Q > 0, inductive load, B < 0
 
 The first load step raises the nominal-voltage active-power target to
 `1.0 pu`, so active electrical power is larger than the constant mechanical
-input and the rotor decelerates. The second load step keeps the rotor
-decelerating. The third load step keeps `P = 0.8 pu` but changes the angle to
-`+60 deg`; at the reached speed, active electrical power becomes lower than
-mechanical input, so the rotor accelerates toward a high open-loop equilibrium.
+input and the rotor decelerates. The second load step changes the target to
+`0.6 pu` at `-10 deg`; at the reached speed, active electrical power becomes
+lower than mechanical input, so the rotor accelerates toward about `68.57 Hz`.
+The third load step keeps `P = 0.6 pu` but changes the angle to `+10 deg`;
+the inductive angle lowers the nominal-speed active-power coefficient and the
+rotor accelerates toward about `75.40 Hz`.
 
-With `Z_base = V_LL^2 / S_base = 1.6 ohm`, the four per-phase impedance
-magnitudes are `2.2627 ohm`, `1.3856 ohm`, `1.0000 ohm`, and `1.0000 ohm`.
+With `Z_base = V_LL^2 / S_base = 1.6 ohm`, the four per-phase equivalent
+impedance magnitudes are `2.2627 ohm`, `1.3856 ohm`, `2.6262 ohm`, and
+`2.6262 ohm`.
 The rectangular values are approximately `1.6000 - j1.6000 ohm`,
-`1.2000 - j0.6928 ohm`, `0.5000 - j0.8660 ohm`, and
-`0.5000 + j0.8660 ohm`.
+`1.2000 - j0.6928 ohm`, `2.5863 - j0.4560 ohm`, and
+`2.5863 + j0.4560 ohm`.
 
-The current regenerated run reaches about `101.02 Hz` at `110 s`, while the
-open-loop equilibrium theory predicts about `103.28 Hz`. The estimated settling
-time is about `121.27 s`, so the validation report intentionally contains one
-warning that the final frequency has not fully reached the theoretical
-equilibrium inside the current simulation window.
+The current regenerated run reaches about `75.36 Hz` at `110 s`, while the
+open-loop equilibrium theory predicts about `75.40 Hz`. The estimated settling
+time is about `89.72 s`, so the validation report currently contains only PASS
+rows for the default run.
 
 The accumulated rotor-reference angle does not have to return to zero when the
 frequency reaches the final equilibrium. It is an integral of all previous
@@ -213,6 +215,7 @@ This animation is intentionally rendered only as:
 
 ```text
 results/animations/06_rotor_reference_slip.mp4
+D:/dynamic_ac_generator_open_loop_three_step_load_10_40_70s_speed_voltage_slip_gif_mp4_study/results/animations/06_rotor_reference_slip.mp4
 ```
 
 No paired `06_rotor_reference_slip.gif` should be produced for this animation.
@@ -350,8 +353,8 @@ The open-loop validation checks that:
 - field current remains constant without AVR
 - terminal voltage drops after the first load change
 - final frequency reaches the theoretical open-loop equilibrium
-- frequency decreases after the second load change
-- frequency increases after the third load restoration
+- frequency response follows the second load-change power imbalance
+- frequency response follows the third load-change power imbalance
 - terminal phasors are drawn relative to `V_terminal = |V_terminal| angle 0 deg`
 - phase voltages are displaced by approximately 120 degrees
 - total instantaneous power varies smoothly for a balanced load

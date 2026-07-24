@@ -86,20 +86,42 @@ def build_validation_report(
         and first_step_frequency_change_hz * power_imbalance_pu > 0.0
     )
     second_step_frequency_change_hz = math.nan
+    second_step_power_imbalance_pu = math.nan
+    second_step_direction_consistent = False
     if results.config.CONTROL_MODE == "unregulated" and len(results.config.load_step_times_s) > 1:
         second_step_time_s = results.config.load_step_times_s[1]
         second_step_index = int(np.searchsorted(results.time_s, second_step_time_s))
         after_second_step_index = int(np.searchsorted(results.time_s, second_step_time_s + 0.20))
+        second_step_sign_index = int(np.searchsorted(results.time_s, second_step_time_s + 0.02))
         second_step_frequency_change_hz = float(
             frequency_hz[after_second_step_index] - frequency_hz[second_step_index]
         )
+        second_step_power_imbalance_pu = float(
+            results.mechanical_power_pu[second_step_sign_index]
+            - results.electrical_power_pu[second_step_sign_index]
+        )
+        second_step_direction_consistent = (
+            abs(second_step_frequency_change_hz) > 0.01
+            and second_step_frequency_change_hz * second_step_power_imbalance_pu > 0.0
+        )
     third_step_frequency_change_hz = math.nan
+    third_step_power_imbalance_pu = math.nan
+    third_step_direction_consistent = False
     if results.config.CONTROL_MODE == "unregulated" and len(results.config.load_step_times_s) > 2:
         third_step_time_s = results.config.load_step_times_s[2]
         third_step_index = int(np.searchsorted(results.time_s, third_step_time_s))
         after_third_step_index = int(np.searchsorted(results.time_s, third_step_time_s + 0.20))
+        third_step_sign_index = int(np.searchsorted(results.time_s, third_step_time_s + 0.02))
         third_step_frequency_change_hz = float(
             frequency_hz[after_third_step_index] - frequency_hz[third_step_index]
+        )
+        third_step_power_imbalance_pu = float(
+            results.mechanical_power_pu[third_step_sign_index]
+            - results.electrical_power_pu[third_step_sign_index]
+        )
+        third_step_direction_consistent = (
+            abs(third_step_frequency_change_hz) > 0.01
+            and third_step_frequency_change_hz * third_step_power_imbalance_pu > 0.0
         )
 
     if results.config.CONTROL_MODE == "pi":
@@ -181,10 +203,8 @@ def build_validation_report(
         *(
             [
                 {
-                    "status": classify_check(
-                        second_step_frequency_change_hz < -0.01
-                    ),
-                    "check": "Frequency decreases after the second load change",
+                    "status": classify_check(second_step_direction_consistent),
+                    "check": "Frequency follows the second load-change power imbalance",
                     "value": second_step_frequency_change_hz,
                     "unit": "Hz change",
                 }
@@ -195,10 +215,8 @@ def build_validation_report(
         *(
             [
                 {
-                    "status": classify_check(
-                        third_step_frequency_change_hz > 0.01
-                    ),
-                    "check": "Frequency increases after the third load restoration",
+                    "status": classify_check(third_step_direction_consistent),
+                    "check": "Frequency follows the third load-change power imbalance",
                     "value": third_step_frequency_change_hz,
                     "unit": "Hz change",
                 }
