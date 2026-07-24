@@ -62,10 +62,10 @@ The first load step raises the nominal-voltage active-power target to
 `1.0 pu`, so active electrical power is larger than the constant mechanical
 input and the rotor decelerates. The second load step changes the target to
 `0.6 pu` at `-10 deg`; at the reached speed, active electrical power becomes
-lower than mechanical input, so the rotor accelerates toward about `68.57 Hz`.
+lower than mechanical input, so the rotor accelerates toward about `57.08 Hz`.
 The third load step keeps `P = 0.6 pu` but changes the angle to `+10 deg`;
 the inductive angle lowers the nominal-speed active-power coefficient and the
-rotor accelerates toward about `75.40 Hz`.
+rotor accelerates toward about `58.29 Hz`.
 
 With `Z_base = V_LL^2 / S_base = 1.6 ohm`, the four per-phase equivalent
 impedance magnitudes are `2.2627 ohm`, `1.3856 ohm`, `2.6262 ohm`, and
@@ -74,9 +74,9 @@ The rectangular values are approximately `1.6000 - j1.6000 ohm`,
 `1.2000 - j0.6928 ohm`, `2.5863 - j0.4560 ohm`, and
 `2.5863 + j0.4560 ohm`.
 
-The current regenerated run reaches about `75.36 Hz` at `110 s`, while the
-open-loop equilibrium theory predicts about `75.40 Hz`. The estimated settling
-time is about `89.72 s`, so the validation report currently contains only PASS
+The current regenerated run reaches about `58.29 Hz` at `110 s`, while the
+open-loop equilibrium theory predicts about `58.29 Hz`. The estimated settling
+time is about `75.15 s`, so the validation report currently contains only PASS
 rows for the default run.
 
 The accumulated rotor-reference angle does not have to return to zero when the
@@ -138,8 +138,19 @@ E_internal angle = -angle(V_terminal in the internal-voltage reference frame)
 Default simplified impedance:
 
 ```text
-R_s = 0.02 pu
-X_s = 0.50 pu
+R_s = 0.004 pu = 0.0064 ohm
+X_s = 0.100 pu = 0.1600 ohm
+Z_generator = 0.004 + j0.100 pu = 0.0064 + j0.1600 ohm
+|Z_generator| = 0.10008 pu angle 87.71 deg
+```
+
+Total per-unit impedance seen by the internal generated voltage:
+
+```text
+0 s  -> 1.0040 - j0.9000 pu -> 1.3483 pu angle -41.87 deg
+10 s -> 0.7540 - j0.3330 pu -> 0.8243 pu angle -23.83 deg
+40 s -> 1.6204 - j0.1850 pu -> 1.6309 pu angle -6.51 deg
+70 s -> 1.6204 + j0.3850 pu -> 1.6655 pu angle +13.37 deg
 ```
 
 Open-loop equilibrium with `D = 0`:
@@ -351,7 +362,7 @@ The open-loop validation checks that:
 - mechanical power remains constant without a speed regulator
 - initial terminal voltage is nominal
 - field current remains constant without AVR
-- terminal voltage drops after the first load change
+- terminal voltage changes after the first load change
 - final frequency reaches the theoretical open-loop equilibrium
 - frequency response follows the second load-change power imbalance
 - frequency response follows the third load-change power imbalance

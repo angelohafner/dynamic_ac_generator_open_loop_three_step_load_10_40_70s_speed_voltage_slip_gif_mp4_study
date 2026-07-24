@@ -1,14 +1,14 @@
 status,check,value,unit
 PASS,Initial frequency is approximately 60 Hz,0.0,Hz error
-PASS,Initial mechanical and electrical powers are equal,2.7755575615628914e-16,pu error
-PASS,Frequency initially follows the first load-change power imbalance,-0.6036644926090631,Hz change
+PASS,Initial mechanical and electrical powers are equal,0.0,pu error
+PASS,Frequency initially follows the first load-change power imbalance,-0.9741317478544929,Hz change
 PASS,Mechanical power remains constant without a speed regulator,0.0,pu change
-PASS,Initial terminal voltage is nominal in open-loop excitation,1.1368683772161603e-13,V LL RMS error
+PASS,Initial terminal voltage is nominal in open-loop excitation,5.684341886080802e-14,V LL RMS error
 PASS,Field current remains constant in open-loop excitation,0.0,pu change
-PASS,Terminal voltage drops after the first load change,40.01254031438856,V LL RMS drop
-PASS,Final frequency reaches the theoretical open-loop equilibrium,0.037285380371884,Hz error
-PASS,Frequency follows the second load-change power imbalance,0.5216994129650558,Hz change
-PASS,Frequency follows the third load-change power imbalance,0.17855894413321494,Hz change
-PASS,Three phase voltages are displaced by approximately 120 degrees,0.5662796583798979,degree error
-PASS,Total instantaneous power varies smoothly for a balanced load,0.003535656394331743,relative standard deviation
-PASS,Energy and power signs are consistent immediately after the disturbance,-0.05139307306621326,pu/s speed derivative
+PASS,Terminal voltage changes after the first load change,0.6553685104496481,V LL RMS change
+PASS,Final frequency reaches the theoretical open-loop equilibrium,0.00137508700244382,Hz error
+PASS,Frequency follows the second load-change power imbalance,0.44338178151752317,Hz change
+PASS,Frequency follows the third load-change power imbalance,0.04332600285866306,Hz change
+PASS,Three phase voltages are displaced by approximately 120 degrees,0.9119486898971161,degree error
+PASS,Total instantaneous power varies smoothly for a balanced load,0.005730558235287695,relative standard deviation
+PASS,Energy and power signs are consistent immediately after the disturbance,-0.08334900787995694,pu/s speed derivative

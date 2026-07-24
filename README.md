@@ -37,6 +37,15 @@ The default load model is:
 LOAD_MODEL = "parallel_admittance"
 ```
 
+The simplified generator internal impedance is:
+
+```text
+R_s = 0.004 pu = 0.0064 ohm
+X_s = 0.100 pu = 0.1600 ohm
+Z_generator = 0.004 + j0.100 pu = 0.0064 + j0.1600 ohm
+|Z_generator| = 0.10008 pu angle 87.71 deg
+```
+
 In this mode, the configured `*_LOAD_PU` values are nominal-voltage active-power
 targets, not series-impedance magnitudes. The load angle is interpreted as the
 power angle and as the angle of the equivalent impedance. With nominal
@@ -83,13 +92,13 @@ Interpretation:
   rotor decelerates.
 - After `40 s`: the nominal-voltage active-power target becomes `0.6 pu` at
   `-10 deg`; at the reached speed the electrical active power is below the
-  constant mechanical input, so the rotor accelerates toward about `68.57 Hz`.
+  constant mechanical input, so the rotor accelerates toward about `57.08 Hz`.
 - After `70 s`: the active-power target stays at `0.6 pu`, but the angle changes
   to `+10 deg`; the inductive angle lowers the nominal-speed active-power
-  coefficient and the rotor accelerates toward about `75.40 Hz`.
-- By `110 s`: the numerical frequency is about `75.36 Hz`, essentially at the
-  final theoretical open-loop equilibrium of about `75.40 Hz`; the estimated
-  settling time is about `89.72 s`.
+  coefficient and the rotor accelerates toward about `58.29 Hz`.
+- By `110 s`: the numerical frequency is about `58.29 Hz`, essentially at the
+  final theoretical open-loop equilibrium of about `58.29 Hz`; the estimated
+  settling time is about `75.15 s`.
 
 The equivalent per-phase impedance values in ohms are obtained from
 `Z_base = V_LL^2 / S_base = 1.6 ohm`:
@@ -99,6 +108,16 @@ The equivalent per-phase impedance values in ohms are obtained from
 0.8660254037844387 pu angle -30 deg -> 1.3856 ohm angle -30 deg -> 1.2000 - j0.6928 ohm
 1.6413462550 pu angle -10 deg -> 2.6262 ohm angle -10 deg -> 2.5863 - j0.4560 ohm
 1.6413462550 pu angle +10 deg -> 2.6262 ohm angle +10 deg -> 2.5863 + j0.4560 ohm
+```
+
+The total per-unit impedance seen by the internal generated voltage is
+`Z_total = Z_equivalent + Z_generator`:
+
+```text
+0 s  -> 1.0040 - j0.9000 pu -> 1.3483 pu angle -41.87 deg
+10 s -> 0.7540 - j0.3330 pu -> 0.8243 pu angle -23.83 deg
+40 s -> 1.6204 - j0.1850 pu -> 1.6309 pu angle -6.51 deg
+70 s -> 1.6204 + j0.3850 pu -> 1.6655 pu angle +13.37 deg
 ```
 
 The accumulated rotor-reference angle does not necessarily return to zero when
@@ -455,7 +474,7 @@ The tests cover:
 - terminal-voltage-reference phasor convention
 - open-loop field-current behavior
 - generated voltage proportional to field current and speed
-- terminal-voltage drop after the first load change
+- terminal-voltage change after the first load change
 - frequency response follows the active-power imbalance after each load change
 - open-loop equilibrium theory
 - damping comparison outputs
@@ -472,9 +491,9 @@ After the default run, the expected qualitative behavior is:
 
 - `0 s` to `10 s`: steady at 60 Hz
 - after `10 s`: frequency decreases because the nominal-voltage active-power target rises to `1.0 pu`
-- after `40 s`: frequency reaches its minimum near `47.16 Hz`, then accelerates because the `P = 0.6 pu`, `phi = -10 deg` load consumes less active power than the constant mechanical input at that speed
-- after `70 s`: frequency is about `68.25 Hz`; the final `P = 0.6 pu`, `phi = +10 deg` load keeps the rotor accelerating toward the new equilibrium
-- by `110 s`: frequency reaches about `75.36 Hz`, matching the final theoretical open-loop equilibrium of about `75.40 Hz`
+- after `40 s`: frequency reaches its minimum near `42.37 Hz`, then accelerates because the `P = 0.6 pu`, `phi = -10 deg` load consumes less active power than the constant mechanical input at that speed
+- after `70 s`: frequency is about `57.00 Hz`; the final `P = 0.6 pu`, `phi = +10 deg` load keeps the rotor accelerating slightly toward the new equilibrium
+- by `110 s`: frequency reaches about `58.29 Hz`, matching the final theoretical open-loop equilibrium of about `58.29 Hz`
 
 ## Notes For Codex
 

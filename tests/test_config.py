@@ -17,6 +17,8 @@ def test_default_config_uses_parallel_admittance_power_steps() -> None:
 
     assert config.CONTROL_MODE == "unregulated"
     assert config.LOAD_MODEL == "parallel_admittance"
+    assert math.isclose(config.STATOR_RESISTANCE_PU, 0.004, rel_tol=1e-12)
+    assert math.isclose(config.SYNCHRONOUS_REACTANCE_PU, 0.10, rel_tol=1e-12)
     assert math.isclose(config.SIMULATION_TIME_S, 110.0, rel_tol=1e-12)
     assert math.isclose(config.DAMPING_COMPARISON_SIMULATION_TIME_S, 110.0, rel_tol=1e-12)
     assert math.isclose(config.phase_voltage_rms, 400.0 / math.sqrt(3.0), rel_tol=1e-12)

@@ -90,7 +90,7 @@ def test_default_three_step_case_predicts_moderate_high_frequency_equilibrium() 
     theory = calculate_unregulated_frequency_theory(config)
 
     assert theory.has_finite_equilibrium
-    assert math.isclose(theory.final_frequency_hz, 75.401679285, abs_tol=1e-6)
+    assert math.isclose(theory.final_frequency_hz, 58.2944625735, abs_tol=1e-6)
     assert theory.settling_time_s > config.THIRD_LOAD_STEP_TIME_S
     assert theory.settling_time_s < config.SIMULATION_TIME_S
 
@@ -99,9 +99,14 @@ def test_damping_comparison_contains_undamped_and_damped_frequency_columns() -> 
     base_config = SimulationConfig(CONTROL_MODE="unregulated")
 
     comparison = build_damping_comparison(base_config)
+    undamped_theory = calculate_unregulated_frequency_theory(base_config)
 
     assert comparison.theory.has_finite_equilibrium
-    assert comparison.table["frequency_no_damping_hz"].iloc[-1] > base_config.F_NOM_HZ - 0.50
+    assert math.isclose(
+        comparison.table["frequency_no_damping_hz"].iloc[-1],
+        undamped_theory.final_frequency_hz,
+        abs_tol=0.50,
+    )
     assert math.isclose(
         comparison.table["frequency_with_damping_hz"].iloc[-1],
         comparison.theory.final_frequency_hz,

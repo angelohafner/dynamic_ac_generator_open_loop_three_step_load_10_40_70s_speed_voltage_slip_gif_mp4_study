@@ -17,8 +17,8 @@ class SimulationConfig:
     V_LL_RMS: float = 400.0
     S_BASE_VA: float = 100_000.0
     FIELD_CURRENT_INITIAL_PU: float = 1.0
-    STATOR_RESISTANCE_PU: float = 0.02
-    SYNCHRONOUS_REACTANCE_PU: float = 0.50
+    STATOR_RESISTANCE_PU: float = 0.004
+    SYNCHRONOUS_REACTANCE_PU: float = 0.10
 
     H: float = 3.0
     D: float = 0.0

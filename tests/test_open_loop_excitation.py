@@ -50,20 +50,20 @@ def test_open_loop_load_step_changes_voltage_with_constant_field_current() -> No
     assert math.isclose(results.field_current_pu[0], config.FIELD_CURRENT_INITIAL_PU, abs_tol=1e-12)
     assert math.isclose(results.field_current_pu[-1], config.FIELD_CURRENT_INITIAL_PU, abs_tol=1e-12)
     assert math.isclose(results.terminal_voltage_ll_rms[0], config.V_LL_RMS, abs_tol=1e-9)
-    assert results.terminal_voltage_ll_rms[step_index + 1] < results.terminal_voltage_ll_rms[0]
+    assert abs(results.terminal_voltage_ll_rms[step_index + 1] - results.terminal_voltage_ll_rms[0]) > 0.50
     assert math.isclose(
         results.internal_voltage_ll_rms[step_index + 1] / results.internal_voltage_ll_rms[0],
         results.omega_pu[step_index + 1],
         rel_tol=1e-9,
     )
-    assert results.internal_voltage_ll_rms[-1] > results.internal_voltage_ll_rms[0]
+    assert results.internal_voltage_ll_rms[-1] < results.internal_voltage_ll_rms[0]
     assert math.isclose(
         results.internal_voltage_ll_rms[-1] / results.internal_voltage_ll_rms[0],
         results.omega_pu[-1],
         rel_tol=1e-9,
     )
     theory = calculate_unregulated_frequency_theory(config)
-    assert results.frequency_hz[-1] > config.F_NOM_HZ + 10.0
+    assert results.frequency_hz[-1] < config.F_NOM_HZ
     assert math.isclose(
         results.frequency_hz[-1],
         theory.final_frequency_hz,

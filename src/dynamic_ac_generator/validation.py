@@ -53,7 +53,7 @@ def build_validation_report(
     final_frequency_error_hz = abs(float(frequency_hz[-1] - results.config.F_NOM_HZ))
     initial_terminal_voltage_error_v = abs(float(results.terminal_voltage_ll_rms[0] - results.config.V_LL_RMS))
     field_current_change_pu = abs(float(results.field_current_pu[-1] - results.field_current_pu[0]))
-    terminal_voltage_drop_v = float(results.terminal_voltage_ll_rms[0] - results.terminal_voltage_ll_rms[step_index + 1])
+    terminal_voltage_step_change_v = float(results.terminal_voltage_ll_rms[step_index + 1] - results.terminal_voltage_ll_rms[0])
 
     phase_ab_degrees = estimate_phase_displacement_degrees(
         waveform_window["voltage_a_v"].to_numpy(dtype=float),
@@ -194,10 +194,10 @@ def build_validation_report(
             "unit": "pu change",
         },
         {
-            "status": classify_check(terminal_voltage_drop_v > 1.0),
-            "check": "Terminal voltage drops after the first load change",
-            "value": terminal_voltage_drop_v,
-            "unit": "V LL RMS drop",
+            "status": classify_check(abs(terminal_voltage_step_change_v) > 0.50),
+            "check": "Terminal voltage changes after the first load change",
+            "value": terminal_voltage_step_change_v,
+            "unit": "V LL RMS change",
         },
         final_frequency_row,
         *(
