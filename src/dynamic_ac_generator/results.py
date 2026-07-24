@@ -30,6 +30,12 @@ class SimulationResults:
     load_impedance_imag_ohm: FloatArray
     load_impedance_magnitude_ohm: FloatArray
     load_impedance_angle_deg: FloatArray
+    load_admittance_real_pu: FloatArray
+    load_admittance_imag_pu: FloatArray
+    load_admittance_magnitude_pu: FloatArray
+    load_admittance_angle_deg: FloatArray
+    load_conductance_pu: FloatArray
+    load_susceptance_pu: FloatArray
     mechanical_power_reference_pu: FloatArray
     field_current_pu: FloatArray
     internal_voltage_ll_rms: FloatArray
@@ -73,6 +79,12 @@ class SimulationResults:
                 "load_impedance_imag_ohm": self.load_impedance_imag_ohm,
                 "load_impedance_magnitude_ohm": self.load_impedance_magnitude_ohm,
                 "load_impedance_angle_deg": self.load_impedance_angle_deg,
+                "load_admittance_real_pu": self.load_admittance_real_pu,
+                "load_admittance_imag_pu": self.load_admittance_imag_pu,
+                "load_admittance_magnitude_pu": self.load_admittance_magnitude_pu,
+                "load_admittance_angle_deg": self.load_admittance_angle_deg,
+                "load_conductance_pu": self.load_conductance_pu,
+                "load_susceptance_pu": self.load_susceptance_pu,
                 "rotor_angle_rad": self.rotor_angle_rad,
                 "governor_integral_state": self.integral_state,
             }
@@ -164,6 +176,14 @@ def build_summary_table(results: SimulationResults) -> pd.DataFrame:
         ("Initial load impedance angle", float(results.load_impedance_angle_deg[0]), "deg"),
         ("Final load impedance magnitude", float(results.load_impedance_magnitude_ohm[-1]), "ohm"),
         ("Final load impedance angle", float(results.load_impedance_angle_deg[-1]), "deg"),
+        ("Initial load admittance magnitude", float(results.load_admittance_magnitude_pu[0]), "pu"),
+        ("Initial load admittance angle", float(results.load_admittance_angle_deg[0]), "deg"),
+        ("Initial load conductance", float(results.load_conductance_pu[0]), "pu"),
+        ("Initial load susceptance", float(results.load_susceptance_pu[0]), "pu"),
+        ("Final load admittance magnitude", float(results.load_admittance_magnitude_pu[-1]), "pu"),
+        ("Final load admittance angle", float(results.load_admittance_angle_deg[-1]), "deg"),
+        ("Final load conductance", float(results.load_conductance_pu[-1]), "pu"),
+        ("Final load susceptance", float(results.load_susceptance_pu[-1]), "pu"),
         ("Settling time", format_metric_value(settling_time_s), "s"),
         ("Steady-state frequency error", float(results.config.F_NOM_HZ - frequency_hz[-1]), "Hz"),
     ]

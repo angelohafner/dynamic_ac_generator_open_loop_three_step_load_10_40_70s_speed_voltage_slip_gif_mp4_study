@@ -103,8 +103,8 @@ def test_validation_report_passes_for_unregulated_default_case(default_results: 
 
     assert set(report["status"]) <= {"PASS", "WARNING"}
     assert "FAIL" not in set(report["status"])
-    assert "Frequency initially follows the first impedance-change power imbalance" in set(report["check"])
-    assert "Frequency decreases after the second impedance change" in set(report["check"])
+    assert "Frequency initially follows the first load-change power imbalance" in set(report["check"])
+    assert "Frequency decreases after the second load change" in set(report["check"])
     assert "Frequency increases after the third load restoration" in set(report["check"])
 
 

@@ -100,6 +100,12 @@ def test_complete_run_writes_open_loop_voltage_outputs(tmp_path) -> None:
     assert "terminal_voltage_ll_rms" in artifacts.results.to_dataframe().columns
     assert "load_impedance_magnitude_ohm" in artifacts.results.to_dataframe().columns
     assert "load_impedance_angle_deg" in artifacts.results.to_dataframe().columns
+    assert "load_admittance_real_pu" in artifacts.results.to_dataframe().columns
+    assert "load_admittance_imag_pu" in artifacts.results.to_dataframe().columns
+    assert "load_admittance_magnitude_pu" in artifacts.results.to_dataframe().columns
+    assert "load_admittance_angle_deg" in artifacts.results.to_dataframe().columns
+    assert "load_conductance_pu" in artifacts.results.to_dataframe().columns
+    assert "load_susceptance_pu" in artifacts.results.to_dataframe().columns
     assert "reactive_power_pu" in artifacts.results.to_dataframe().columns
     assert artifacts.open_loop_equilibrium_curve_path is not None
     assert artifacts.open_loop_equilibrium_curve_path.exists()

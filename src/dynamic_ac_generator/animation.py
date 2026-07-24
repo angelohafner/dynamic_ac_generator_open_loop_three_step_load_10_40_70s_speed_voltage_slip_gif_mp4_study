@@ -1060,6 +1060,54 @@ def generate_rotor_reference_slip_animation(
         results.time_s,
         active_frame_times_s,
     )
+    frame_load_admittance_magnitude_pu = _interpolate(
+        results.load_admittance_magnitude_pu,
+        results.time_s,
+        active_frame_times_s,
+    )
+    frame_load_admittance_real_pu = _interpolate(
+        results.load_admittance_real_pu,
+        results.time_s,
+        active_frame_times_s,
+    )
+    frame_load_admittance_imag_pu = _interpolate(
+        results.load_admittance_imag_pu,
+        results.time_s,
+        active_frame_times_s,
+    )
+    frame_load_admittance_angle_deg = _interpolate(
+        results.load_admittance_angle_deg,
+        results.time_s,
+        active_frame_times_s,
+    )
+    if config.LOAD_MODEL == "parallel_admittance":
+        frame_load_quantity_magnitude = frame_load_admittance_magnitude_pu
+        frame_load_quantity_real = frame_load_admittance_real_pu
+        frame_load_quantity_imaginary = frame_load_admittance_imag_pu
+        frame_load_quantity_angle_deg = frame_load_admittance_angle_deg
+        load_quantity_title = "Load Admittance"
+        load_quantity_ylabel = "Admittance (pu)"
+        load_magnitude_label = "|Y|"
+        load_real_label = "G"
+        load_imaginary_label = "B"
+        faded_load_magnitude_label = "_Full load admittance magnitude"
+        faded_load_real_label = "_Full load conductance"
+        faded_load_imaginary_label = "_Full load susceptance"
+        faded_load_angle_label = "_Full load admittance angle"
+    else:
+        frame_load_quantity_magnitude = frame_load_impedance_magnitude_ohm
+        frame_load_quantity_real = frame_load_impedance_real_ohm
+        frame_load_quantity_imaginary = frame_load_impedance_imag_ohm
+        frame_load_quantity_angle_deg = frame_load_impedance_angle_deg
+        load_quantity_title = "Load Impedance"
+        load_quantity_ylabel = "Impedance (ohm)"
+        load_magnitude_label = "|Z|"
+        load_real_label = "Re(Z)"
+        load_imaginary_label = "Im(Z)"
+        faded_load_magnitude_label = "_Full load impedance magnitude"
+        faded_load_real_label = "_Full load impedance real"
+        faded_load_imaginary_label = "_Full load impedance imaginary"
+        faded_load_angle_label = "_Full load impedance angle"
     frame_terminal_angle_rad = _interpolate(
         results.terminal_voltage_angle_rad,
         results.time_s,
@@ -1306,40 +1354,40 @@ def generate_rotor_reference_slip_animation(
 
     impedance_magnitude_axis.plot(
         animation_time_s,
-        frame_load_impedance_magnitude_ohm,
+        frame_load_quantity_magnitude,
         alpha=0.25,
-        label="_Full load impedance magnitude",
+        label=faded_load_magnitude_label,
     )
     impedance_magnitude_axis.plot(
         animation_time_s,
-        frame_load_impedance_real_ohm,
+        frame_load_quantity_real,
         alpha=0.25,
-        label="_Full load impedance real",
+        label=faded_load_real_label,
     )
     impedance_magnitude_axis.plot(
         animation_time_s,
-        frame_load_impedance_imag_ohm,
+        frame_load_quantity_imaginary,
         alpha=0.25,
-        label="_Full load impedance imaginary",
+        label=faded_load_imaginary_label,
     )
     impedance_angle_axis.plot(
         animation_time_s,
-        frame_load_impedance_angle_deg,
+        frame_load_quantity_angle_deg,
         alpha=0.25,
         color="tab:purple",
-        label="_Full load impedance angle",
+        label=faded_load_angle_label,
     )
-    impedance_magnitude_line, = impedance_magnitude_axis.plot([], [], label="|Z|")
-    impedance_real_line, = impedance_magnitude_axis.plot([], [], label="Re(Z)")
-    impedance_imaginary_line, = impedance_magnitude_axis.plot([], [], label="Im(Z)")
+    impedance_magnitude_line, = impedance_magnitude_axis.plot([], [], label=load_magnitude_label)
+    impedance_real_line, = impedance_magnitude_axis.plot([], [], label=load_real_label)
+    impedance_imaginary_line, = impedance_magnitude_axis.plot([], [], label=load_imaginary_label)
     impedance_angle_line, = impedance_angle_axis.plot(
         [],
         [],
         color="tab:purple",
         label="Angle",
     )
-    impedance_magnitude_axis.set_title("Load Impedance")
-    impedance_magnitude_axis.set_ylabel("Impedance (ohm)")
+    impedance_magnitude_axis.set_title(load_quantity_title)
+    impedance_magnitude_axis.set_ylabel(load_quantity_ylabel)
     impedance_angle_axis.set_ylabel("Angle (deg)")
     _enable_grid(impedance_magnitude_axis)
     _enable_grid(impedance_angle_axis)
@@ -1399,14 +1447,14 @@ def generate_rotor_reference_slip_animation(
         *_axis_limits(
             np.concatenate(
                 [
-                    frame_load_impedance_magnitude_ohm,
-                    frame_load_impedance_real_ohm,
-                    frame_load_impedance_imag_ohm,
+                    frame_load_quantity_magnitude,
+                    frame_load_quantity_real,
+                    frame_load_quantity_imaginary,
                 ]
             )
         )
     )
-    impedance_angle_axis.set_ylim(*_axis_limits(frame_load_impedance_angle_deg))
+    impedance_angle_axis.set_ylim(*_axis_limits(frame_load_quantity_angle_deg))
     lead_axis.set_ylim(*_axis_limits(lead_cycles))
 
     def update(frame_index: int) -> list[object]:
@@ -1477,19 +1525,19 @@ def generate_rotor_reference_slip_animation(
         )
         impedance_magnitude_line.set_data(
             animation_time_s[current_slice],
-            frame_load_impedance_magnitude_ohm[current_slice],
+            frame_load_quantity_magnitude[current_slice],
         )
         impedance_real_line.set_data(
             animation_time_s[current_slice],
-            frame_load_impedance_real_ohm[current_slice],
+            frame_load_quantity_real[current_slice],
         )
         impedance_imaginary_line.set_data(
             animation_time_s[current_slice],
-            frame_load_impedance_imag_ohm[current_slice],
+            frame_load_quantity_imaginary[current_slice],
         )
         impedance_angle_line.set_data(
             animation_time_s[current_slice],
-            frame_load_impedance_angle_deg[current_slice],
+            frame_load_quantity_angle_deg[current_slice],
         )
         lead_line.set_data(
             animation_time_s[current_slice],

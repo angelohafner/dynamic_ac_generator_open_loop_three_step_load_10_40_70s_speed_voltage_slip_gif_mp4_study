@@ -324,15 +324,23 @@ def test_default_animation_workflow_renders_only_slip_mp4() -> None:
     assert "generate_open_loop_voltage_animation" not in source
 
 
-def test_rotor_reference_slip_includes_load_impedance_panel_with_stacked_axes() -> None:
+def test_rotor_reference_slip_includes_load_admittance_panel_with_stacked_axes() -> None:
     source = inspect.getsource(animation.generate_rotor_reference_slip_animation)
 
     assert "frame_load_impedance_magnitude_ohm" in source
     assert "frame_load_impedance_real_ohm" in source
     assert "frame_load_impedance_imag_ohm" in source
     assert "frame_load_impedance_angle_deg" in source
-    assert "Load Impedance" in source
+    assert "frame_load_admittance_magnitude_pu" in source
+    assert "frame_load_admittance_real_pu" in source
+    assert "frame_load_admittance_imag_pu" in source
+    assert "frame_load_admittance_angle_deg" in source
+    assert "Load Admittance" in source
     assert '"Impedance (ohm)"' in source
+    assert '"Admittance (pu)"' in source
+    assert '"|Y|"' in source
+    assert '"G"' in source
+    assert '"B"' in source
     assert '"Re(Z)"' in source
     assert '"Im(Z)"' in source
     assert '"Angle (deg)"' in source
@@ -340,6 +348,8 @@ def test_rotor_reference_slip_includes_load_impedance_panel_with_stacked_axes() 
     assert "impedance_magnitude_axis" in source
     assert "results.load_impedance_magnitude_ohm" in source
     assert "results.load_impedance_angle_deg" in source
+    assert "results.load_admittance_magnitude_pu" in source
+    assert "results.load_admittance_angle_deg" in source
 
 
 def test_rotor_reference_slip_includes_phasor_panel_below_rotor() -> None:

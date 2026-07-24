@@ -1,7 +1,7 @@
 # Dynamic AC Generator Open-Loop Three-Step Load Study
 
 This repository contains a didactic Python project for studying a simplified
-isolated three-phase AC generator feeding a balanced star-connected complex-impedance
+isolated three-phase AC generator feeding a balanced star-connected complex
 load. The default study is open loop for speed and open loop for voltage:
 
 - no speed governor in the default case
@@ -9,7 +9,8 @@ load. The default study is open loop for speed and open loop for voltage:
 - constant mechanical input
 - constant field current
 - generated internal voltage proportional to field current and rotor speed
-- balanced three-phase impedance load with configurable magnitude and angle
+- balanced three-phase parallel-admittance load with configurable active-power
+  target and load angle
 - static figures, CSV outputs, and one default MP4 animation
 
 The project was evolved from an exploratory notebook into a modular Python
@@ -26,26 +27,53 @@ omega_pu(0) = 1.0
 V_terminal_LL_RMS(0) = 400 V
 If(0) = 1.0 pu
 Pm(0) = Pe(0)
-initial load impedance = 1.4142135623730951 pu angle -45 deg
+initial load admittance = 0.5 + j0.5 pu
+initial equivalent load impedance = 1.4142135623730951 pu angle -45 deg
 ```
 
-The default load-impedance schedule is chosen from desired active power at
-nominal terminal voltage with fixed impedance angles:
+The default load model is:
 
 ```text
-P_pu = cos(phi_load) / |Z_load|_pu
-|Z_load|_pu = cos(phi_load) / P_pu
+LOAD_MODEL = "parallel_admittance"
+```
+
+In this mode, the configured `*_LOAD_PU` values are nominal-voltage active-power
+targets, not series-impedance magnitudes. The load angle is interpreted as the
+power angle and as the angle of the equivalent impedance. With nominal
+terminal voltage equal to `1 pu`:
+
+```text
+S_load,nom = P + jQ
+Q = P tan(phi_load)
+Y_load = conj(S_load,nom) = P - jQ
+Z_equivalent = 1 / Y_load
+```
+
+Sign convention:
+
+```text
+phi_load < 0 deg -> Q < 0, capacitive load, B > 0
+phi_load > 0 deg -> Q > 0, inductive load, B < 0
 ```
 
 The resulting schedule is:
 
+| Time | Configured load | Parallel admittance `Y_load` | Equivalent impedance `Z_equivalent` |
+|---:|---:|---:|---:|
+| `0 s` | `P = 0.5 pu`, `phi = -45 deg` | `0.5 + j0.5 pu` | `1.4142135624 pu angle -45 deg` |
+| `10 s` | `P = 1.0 pu`, `phi = -30 deg` | `1.0 + j0.5773502692 pu` | `0.8660254038 pu angle -30 deg` |
+| `40 s` | `P = 0.8 pu`, `phi = -60 deg` | `0.8 + j1.3856406461 pu` | `0.625 pu angle -60 deg` |
+| `70 s` | `P = 0.8 pu`, `phi = +60 deg` | `0.8 - j1.3856406461 pu` | `0.625 pu angle +60 deg` |
+| `110 s` | end of simulation | unchanged from `70 s` | unchanged from `70 s` |
+
+The optional compatibility mode is:
+
 ```text
-t = 0 s:    P_target = 0.5 pu, Z_load = 1.4142135623730951 pu angle -45 deg
-t = 10 s:   P_target = 1.0 pu, Z_load = 0.8660254037844387 pu angle -30 deg
-t = 40 s:   P_target = 0.8 pu, Z_load = 0.625 pu angle -60 deg
-t = 70 s:   P_target = 0.8 pu, Z_load = 0.625 pu angle +60 deg
-t = 110 s:  end of simulation
+LOAD_MODEL = "series_impedance"
 ```
+
+In that mode, the configured `*_LOAD_PU` values are interpreted directly as
+series-impedance magnitudes, preserving the earlier behavior.
 
 Interpretation:
 
@@ -55,14 +83,15 @@ Interpretation:
   rotor decelerates.
 - After `40 s`: the nominal-voltage active-power target becomes `0.8 pu` at
   `-60 deg`; at the reached speed the generator keeps decelerating.
-- After `70 s`: the magnitude stays at `0.625 pu`, but the angle changes to
-  `+60 deg`; active power falls below the constant mechanical input and the
-  rotor accelerates toward a higher open-loop equilibrium.
+- After `70 s`: the active-power target stays at `0.8 pu`, but the angle changes
+  to `+60 deg`; at the reached speed the electrical active power falls below
+  the constant mechanical input and the rotor accelerates toward a higher
+  open-loop equilibrium.
 - By `110 s`: the numerical frequency is about `101.02 Hz`, still approaching
   the final theoretical open-loop equilibrium of about `103.28 Hz`; the
   estimated settling time is about `121.27 s`.
 
-The per-phase impedance values in ohms are obtained from
+The equivalent per-phase impedance values in ohms are obtained from
 `Z_base = V_LL^2 / S_base = 1.6 ohm`:
 
 ```text
@@ -102,15 +131,25 @@ d omega / dt = (Pm - Pe(omega) - D(omega - 1)) / (2H)
 d theta / dt = omega_nominal omega
 ```
 
-Balanced terminal phasor model:
+Default balanced terminal load model:
 
 ```text
-Z_load = |Z_load| angle phi_load
-I_load = E_phase / (Z_load + R_s + jX_s)
-V_terminal_phase = I_load Z_load
+S_load,nom = P + jQ
+Q = P tan(phi_load)
+Y_load = P - jQ
+Z_equivalent = 1 / Y_load
+I_load = E_phase / (Z_equivalent + R_s + jX_s)
+V_terminal_phase = I_load Z_equivalent
 S_load = 3 V_terminal_phase conj(I_load)
 Pe = Re(S_load) / S_base
 Qe = Im(S_load) / S_base
+```
+
+Compatibility series-impedance mode:
+
+```text
+Z_load = |Z_load| angle phi_load
+Y_load = 1 / Z_load
 ```
 
 Terminal phasor diagram convention:
@@ -193,10 +232,12 @@ The synchronized `06_rotor_reference_slip` animation contains:
 - a shaded rotor-reference lag sector
 - six time-domain chart groups arranged as 3 rows by 2 columns:
   frequency, terminal voltage, mechanical/electrical power, internal voltage,
-  load impedance, and accumulated reference lead
-- the load-impedance chart group is split into two stacked subplots sharing
-  the same time axis: `|Z|`, `Re(Z)`, and `Im(Z)` on top, and impedance angle
-  below
+  load admittance, and accumulated reference lead
+- in the default parallel-admittance case, the load chart group is split into
+  two stacked subplots sharing the same time axis: `|Y|`, `G`, and `B` on top,
+  and admittance angle below
+- in the optional series-impedance mode, the same panel falls back to `|Z|`,
+  `Re(Z)`, `Im(Z)`, and impedance angle
 
 The shaded sector starts at 20 percent opacity and becomes more opaque as the
 absolute accumulated lead or lag grows:
@@ -265,7 +306,7 @@ animation is intentionally MP4-only; the paired GIF is removed if it exists.
 ## Module Responsibilities
 
 - `config.py`: editable parameters, load schedule, base quantities, and validation
-- `load.py`: balanced complex-impedance load schedule and impedance calculation
+- `load.py`: balanced load schedule, parallel admittance, and equivalent impedance calculation
 - `excitation.py`: open-loop `E = K_e If omega_pu` excitation model
 - `electrical.py`: balanced per-phase terminal phasor model
 - `generator.py`: state derivatives and three-phase waveform reconstruction
@@ -275,7 +316,7 @@ animation is intentionally MP4-only; the paired GIF is removed if it exists.
 - `results.py`: result container and summary tables
 - `validation.py`: automatic engineering checks
 - `plotting.py`: static Matplotlib figure generation
-- `animation.py`: GIF and MP4 animation generation
+- `animation.py`: MP4 animation workflow and legacy helper animation functions
 - `runner.py`: complete workflow orchestration
 - `cli.py`: command-line interface
 
@@ -297,7 +338,7 @@ ffmpeg -version
 
 ## Run
 
-Run the default open-loop scenario and generate CSVs, figures, GIFs, and MP4:
+Run the default open-loop scenario and generate CSVs, figures, and the MP4:
 
 ```powershell
 python scripts/run_simulation.py
@@ -387,6 +428,12 @@ load_impedance_real_ohm
 load_impedance_imag_ohm
 load_impedance_magnitude_ohm
 load_impedance_angle_deg
+load_admittance_real_pu
+load_admittance_imag_pu
+load_admittance_magnitude_pu
+load_admittance_angle_deg
+load_conductance_pu
+load_susceptance_pu
 rotor_angle_rad
 ```
 
@@ -402,11 +449,12 @@ The tests cover:
 
 - nominal initial operating point
 - load schedule at `10 s`, `40 s`, and `70 s`
-- balanced complex-impedance load calculations
+- balanced parallel-admittance load calculations
+- compatibility checks for the older series-impedance load semantics
 - terminal-voltage-reference phasor convention
 - open-loop field-current behavior
 - generated voltage proportional to field current and speed
-- terminal-voltage drop after the first impedance change
+- terminal-voltage drop after the first load change
 - frequency deceleration after the first two load changes and final acceleration toward the high-frequency open-loop equilibrium
 - open-loop equilibrium theory
 - damping comparison outputs
@@ -424,7 +472,7 @@ After the default run, the expected qualitative behavior is:
 - `0 s` to `10 s`: steady at 60 Hz
 - after `10 s`: frequency decreases because the nominal-voltage active-power target rises to `1.0 pu`
 - after `40 s`: frequency keeps decreasing because electrical power remains larger than mechanical input at the reached speed
-- after `70 s`: frequency increases because the final `0.625 pu angle +60 deg` load consumes less active power than the constant mechanical input at the reached speed
+- after `70 s`: frequency increases because the final `P = 0.8 pu`, `phi = +60 deg` load consumes less active power than the constant mechanical input at the reached speed
 - by `110 s`: frequency reaches about `101.02 Hz`, approaching the final theoretical open-loop equilibrium of about `103.28 Hz`
 
 ## Notes For Codex
@@ -449,9 +497,10 @@ This repository is intended to be self-contained. A new Codex session should:
    this figure; otherwise the load markers visually become `0 s`, `30 s`, and
    `60 s` even though the simulation is configured for `10 s`, `40 s`, and
    `70 s`.
-10. Keep the load-impedance panel on the absolute simulation-time axis, split
-    into two stacked subplots sharing time: `|Z|`, `Re(Z)`, and `Im(Z)` on top,
-    and impedance angle below.
+10. Keep the default load-admittance panel on the absolute simulation-time
+    axis, split into two stacked subplots sharing time: `|Y|`, `G`, and `B` on
+    top, and admittance angle below. The optional `series_impedance` mode may
+    show `|Z|`, `Re(Z)`, `Im(Z)`, and impedance angle instead.
 11. Keep the terminal phasor diagram below the rotating vectors in the left
     column.
 12. Keep both left-column vector panels on Matplotlib polar axes, and keep the

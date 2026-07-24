@@ -11,6 +11,7 @@ class SimulationConfig:
     """Configuration parameters for the isolated generator simulation."""
 
     CONTROL_MODE: str = "unregulated"
+    LOAD_MODEL: str = "parallel_admittance"
 
     F_NOM_HZ: float = 60.0
     V_LL_RMS: float = 400.0
@@ -32,15 +33,15 @@ class SimulationConfig:
     P_M_MIN_PU: float = 0.0
     P_M_MAX_PU: float = 3.0
 
-    INITIAL_LOAD_PU: float = 1.4142135623730951
+    INITIAL_LOAD_PU: float = 0.5
     INITIAL_LOAD_ANGLE_DEG: float = -45.0
-    FINAL_LOAD_PU: float = 0.8660254037844387
+    FINAL_LOAD_PU: float = 1.0
     FINAL_LOAD_ANGLE_DEG: float = -30.0
     SECOND_LOAD_STEP_TIME_S: float | None = 40.0
-    SECOND_STEP_LOAD_PU: float | None = 0.625
+    SECOND_STEP_LOAD_PU: float | None = 0.8
     SECOND_STEP_LOAD_ANGLE_DEG: float | None = -60.0
     THIRD_LOAD_STEP_TIME_S: float | None = 70.0
-    THIRD_STEP_LOAD_PU: float | None = 0.625
+    THIRD_STEP_LOAD_PU: float | None = 0.8
     THIRD_STEP_LOAD_ANGLE_DEG: float | None = 60.0
     ADDITIONAL_LOAD_STEPS: tuple[tuple[float, float, float], ...] | None = None
 
@@ -77,6 +78,8 @@ class SimulationConfig:
             raise ValueError("Nominal frequency must be positive.")
         if self.CONTROL_MODE not in {"unregulated", "pi"}:
             raise ValueError("Control mode must be either 'unregulated' or 'pi'.")
+        if self.LOAD_MODEL not in {"series_impedance", "parallel_admittance"}:
+            raise ValueError("Load model must be either 'series_impedance' or 'parallel_admittance'.")
         if self.V_LL_RMS <= 0.0:
             raise ValueError("Nominal line-to-line RMS voltage must be positive.")
         if self.S_BASE_VA <= 0.0:
@@ -106,29 +109,29 @@ class SimulationConfig:
         if self.P_M_MIN_PU >= self.P_M_MAX_PU:
             raise ValueError("Mechanical power minimum must be lower than maximum.")
         if self.INITIAL_LOAD_PU <= 0.0:
-            raise ValueError("Initial load impedance magnitude must be positive.")
+            raise ValueError("Initial load value must be positive.")
         if self.FINAL_LOAD_PU <= 0.0:
-            raise ValueError("Final load impedance magnitude must be positive.")
+            raise ValueError("Final load value must be positive.")
         if self.SECOND_LOAD_STEP_TIME_S is None and self.SECOND_STEP_LOAD_PU is not None:
-            raise ValueError("Second load impedance magnitude requires a second load-step time.")
+            raise ValueError("Second load value requires a second load-step time.")
         if self.SECOND_LOAD_STEP_TIME_S is not None and self.SECOND_STEP_LOAD_PU is None:
-            raise ValueError("Second load-step time requires a second load impedance magnitude.")
+            raise ValueError("Second load-step time requires a second load value.")
         if self.SECOND_LOAD_STEP_TIME_S is not None and self.SECOND_STEP_LOAD_ANGLE_DEG is None:
-            raise ValueError("Second load-step time requires a second load impedance angle.")
+            raise ValueError("Second load-step time requires a second load angle.")
         if self.SECOND_STEP_LOAD_PU is not None and self.SECOND_STEP_LOAD_PU <= 0.0:
-            raise ValueError("Second load impedance magnitude must be positive.")
+            raise ValueError("Second load value must be positive.")
         if self.THIRD_LOAD_STEP_TIME_S is None and self.THIRD_STEP_LOAD_PU is not None:
-            raise ValueError("Third load impedance magnitude requires a third load-step time.")
+            raise ValueError("Third load value requires a third load-step time.")
         if self.THIRD_LOAD_STEP_TIME_S is not None and self.THIRD_STEP_LOAD_PU is None:
-            raise ValueError("Third load-step time requires a third load impedance magnitude.")
+            raise ValueError("Third load-step time requires a third load value.")
         if self.THIRD_LOAD_STEP_TIME_S is not None and self.THIRD_STEP_LOAD_ANGLE_DEG is None:
-            raise ValueError("Third load-step time requires a third load impedance angle.")
+            raise ValueError("Third load-step time requires a third load angle.")
         if self.THIRD_STEP_LOAD_PU is not None and self.THIRD_STEP_LOAD_PU <= 0.0:
-            raise ValueError("Third load impedance magnitude must be positive.")
+            raise ValueError("Third load value must be positive.")
         if not math.isfinite(self.INITIAL_LOAD_ANGLE_DEG):
-            raise ValueError("Initial load impedance angle must be finite.")
+            raise ValueError("Initial load angle must be finite.")
         if not math.isfinite(self.FINAL_LOAD_ANGLE_DEG):
-            raise ValueError("Final load impedance angle must be finite.")
+            raise ValueError("Final load angle must be finite.")
         initial_active_power_pu = self.nominal_voltage_active_power_pu(
             self.INITIAL_LOAD_PU,
             self.INITIAL_LOAD_ANGLE_DEG,
@@ -138,11 +141,11 @@ class SimulationConfig:
         if not (0.0 < self.LOAD_STEP_TIME_S < self.SIMULATION_TIME_S):
             raise ValueError("Load step time must be greater than zero and lower than the simulation time.")
         previous_step_time_s = self.LOAD_STEP_TIME_S
-        for step_time_s, load_impedance_pu, load_angle_deg in self.additional_load_steps:
-            if load_impedance_pu <= 0.0:
-                raise ValueError("Additional load impedance magnitudes must be positive.")
+        for step_time_s, load_value_pu, load_angle_deg in self.additional_load_steps:
+            if load_value_pu <= 0.0:
+                raise ValueError("Additional load values must be positive.")
             if not math.isfinite(load_angle_deg):
-                raise ValueError("Additional load impedance angles must be finite.")
+                raise ValueError("Additional load angles must be finite.")
             if not (previous_step_time_s < step_time_s < self.SIMULATION_TIME_S):
                 raise ValueError("Additional load-step times must be increasing and inside the simulation time.")
             previous_step_time_s = step_time_s
@@ -203,6 +206,11 @@ class SimulationConfig:
         return self.V_LL_RMS**2 / self.S_BASE_VA
 
     @property
+    def admittance_base_siemens(self) -> float:
+        """Return the three-phase admittance base in siemens."""
+        return 1.0 / self.impedance_base_ohm
+
+    @property
     def stator_resistance_ohm(self) -> float:
         """Return the simplified stator resistance in ohms."""
         return self.STATOR_RESISTANCE_PU * self.impedance_base_ohm
@@ -234,25 +242,47 @@ class SimulationConfig:
 
     @property
     def initial_impedance_ohm(self) -> complex:
-        """Return the initial phase load impedance in ohms."""
+        """Return the initial phase load impedance or equivalent impedance in ohms."""
         return self.impedance_for_load_pu(self.INITIAL_LOAD_PU, self.INITIAL_LOAD_ANGLE_DEG)
 
     @property
     def first_step_impedance_ohm(self) -> complex:
-        """Return the phase load impedance after the first load step."""
+        """Return the phase load impedance or equivalent impedance after the first load step."""
         return self.impedance_for_load_pu(self.FINAL_LOAD_PU, self.FINAL_LOAD_ANGLE_DEG)
 
     @property
     def second_step_impedance_ohm(self) -> complex:
-        """Return the phase load impedance after the second load step."""
+        """Return the phase load impedance or equivalent impedance after the second load step."""
         if self.SECOND_STEP_LOAD_PU is None or self.SECOND_STEP_LOAD_ANGLE_DEG is None:
             return self.first_step_impedance_ohm
         return self.impedance_for_load_pu(self.SECOND_STEP_LOAD_PU, self.SECOND_STEP_LOAD_ANGLE_DEG)
 
     @property
     def final_impedance_ohm(self) -> complex:
-        """Return the final phase load impedance in ohms."""
+        """Return the final phase load impedance or equivalent impedance in ohms."""
         return self.impedance_for_load_pu(self.final_load_pu, self.final_load_angle_deg)
+
+    @property
+    def initial_admittance_pu(self) -> complex:
+        """Return the initial parallel load admittance in per unit."""
+        return self.admittance_for_load_pu(self.INITIAL_LOAD_PU, self.INITIAL_LOAD_ANGLE_DEG)
+
+    @property
+    def first_step_admittance_pu(self) -> complex:
+        """Return the parallel load admittance after the first load step."""
+        return self.admittance_for_load_pu(self.FINAL_LOAD_PU, self.FINAL_LOAD_ANGLE_DEG)
+
+    @property
+    def second_step_admittance_pu(self) -> complex:
+        """Return the parallel load admittance after the second load step."""
+        if self.SECOND_STEP_LOAD_PU is None or self.SECOND_STEP_LOAD_ANGLE_DEG is None:
+            return self.first_step_admittance_pu
+        return self.admittance_for_load_pu(self.SECOND_STEP_LOAD_PU, self.SECOND_STEP_LOAD_ANGLE_DEG)
+
+    @property
+    def final_admittance_pu(self) -> complex:
+        """Return the final parallel load admittance in per unit."""
+        return self.admittance_for_load_pu(self.final_load_pu, self.final_load_angle_deg)
 
     @property
     def initial_resistance_ohm(self) -> float:
@@ -295,7 +325,7 @@ class SimulationConfig:
 
     @property
     def load_schedule(self) -> tuple[tuple[float, float, float], ...]:
-        """Return the full load schedule as (time_s, impedance_magnitude_pu, angle_deg)."""
+        """Return the full load schedule as (time_s, load_value_pu, angle_deg)."""
         return (
             (0.0, self.INITIAL_LOAD_PU, self.INITIAL_LOAD_ANGLE_DEG),
             (self.LOAD_STEP_TIME_S, self.FINAL_LOAD_PU, self.FINAL_LOAD_ANGLE_DEG),
@@ -309,12 +339,12 @@ class SimulationConfig:
 
     @property
     def final_load_pu(self) -> float:
-        """Return the load impedance magnitude in the final schedule segment."""
+        """Return the load value in the final schedule segment."""
         return self.load_schedule[-1][1]
 
     @property
     def final_load_angle_deg(self) -> float:
-        """Return the load impedance angle in the final schedule segment."""
+        """Return the load angle in the final schedule segment."""
         return self.load_schedule[-1][2]
 
     @property
@@ -322,16 +352,32 @@ class SimulationConfig:
         """Return the time of the last load step."""
         return self.load_step_times_s[-1]
 
-    def impedance_for_load_pu(self, load_impedance_pu: float, load_angle_deg: float) -> complex:
-        """Return phase impedance in ohms from per-unit magnitude and angle."""
+    def admittance_for_load_pu(self, load_value_pu: float, load_angle_deg: float) -> complex:
+        """Return parallel admittance in pu from the configured load value semantics."""
         angle_rad = math.radians(load_angle_deg)
-        magnitude_ohm = load_impedance_pu * self.impedance_base_ohm
-        return magnitude_ohm * complex(math.cos(angle_rad), math.sin(angle_rad))
+        if self.LOAD_MODEL == "series_impedance":
+            impedance = load_value_pu * complex(math.cos(angle_rad), math.sin(angle_rad))
+            return 1.0 / impedance
+        reactive_power_pu = load_value_pu * math.tan(angle_rad)
+        return complex(load_value_pu, -reactive_power_pu)
 
-    def nominal_voltage_active_power_pu(self, load_impedance_pu: float, load_angle_deg: float) -> float:
-        """Return active power pu consumed by the impedance at nominal terminal voltage."""
-        return math.cos(math.radians(load_angle_deg)) / load_impedance_pu
+    def impedance_for_load_pu(self, load_value_pu: float, load_angle_deg: float) -> complex:
+        """Return phase impedance in ohms from configured load value semantics."""
+        angle_rad = math.radians(load_angle_deg)
+        if self.LOAD_MODEL == "series_impedance":
+            magnitude_ohm = load_value_pu * self.impedance_base_ohm
+            return magnitude_ohm * complex(math.cos(angle_rad), math.sin(angle_rad))
+        admittance_pu = self.admittance_for_load_pu(load_value_pu, load_angle_deg)
+        return self.impedance_base_ohm / admittance_pu
 
-    def nominal_voltage_reactive_power_pu(self, load_impedance_pu: float, load_angle_deg: float) -> float:
-        """Return reactive power pu consumed by the impedance at nominal terminal voltage."""
-        return math.sin(math.radians(load_angle_deg)) / load_impedance_pu
+    def nominal_voltage_active_power_pu(self, load_value_pu: float, load_angle_deg: float) -> float:
+        """Return active power pu consumed by the load at nominal terminal voltage."""
+        if self.LOAD_MODEL == "series_impedance":
+            return math.cos(math.radians(load_angle_deg)) / load_value_pu
+        return load_value_pu
+
+    def nominal_voltage_reactive_power_pu(self, load_value_pu: float, load_angle_deg: float) -> float:
+        """Return reactive power pu consumed by the load at nominal terminal voltage."""
+        if self.LOAD_MODEL == "series_impedance":
+            return math.sin(math.radians(load_angle_deg)) / load_value_pu
+        return load_value_pu * math.tan(math.radians(load_angle_deg))

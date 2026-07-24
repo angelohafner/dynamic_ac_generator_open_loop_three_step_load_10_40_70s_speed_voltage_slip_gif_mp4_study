@@ -154,7 +154,7 @@ def build_validation_report(
         },
         {
             "status": classify_check(first_step_direction_consistent),
-            "check": "Frequency initially follows the first impedance-change power imbalance",
+            "check": "Frequency initially follows the first load-change power imbalance",
             "value": first_step_frequency_change_hz,
             "unit": "Hz change",
         },
@@ -173,7 +173,7 @@ def build_validation_report(
         },
         {
             "status": classify_check(terminal_voltage_drop_v > 1.0),
-            "check": "Terminal voltage drops after the first impedance change",
+            "check": "Terminal voltage drops after the first load change",
             "value": terminal_voltage_drop_v,
             "unit": "V LL RMS drop",
         },
@@ -184,7 +184,7 @@ def build_validation_report(
                     "status": classify_check(
                         second_step_frequency_change_hz < -0.01
                     ),
-                    "check": "Frequency decreases after the second impedance change",
+                    "check": "Frequency decreases after the second load change",
                     "value": second_step_frequency_change_hz,
                     "unit": "Hz change",
                 }
@@ -217,7 +217,7 @@ def build_validation_report(
                 relative_power_std <= 1e-2,
                 warning_condition=relative_power_std <= 2e-2,
             ),
-            "check": "Total instantaneous power varies smoothly for a balanced impedance load",
+            "check": "Total instantaneous power varies smoothly for a balanced load",
             "value": relative_power_std,
             "unit": "relative standard deviation",
         },

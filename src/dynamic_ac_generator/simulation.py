@@ -123,6 +123,7 @@ class DynamicSimulation:
         rotor_angle_rad = state_matrix[3]
         field_current_pu = state_matrix[4]
         load_impedance_ohm = np.asarray(self.load.impedance_at(time_s), dtype=complex)
+        load_admittance_pu = np.asarray(self.load.admittance_pu_at(time_s), dtype=complex)
         terminal_quantities = self.electrical_model.terminal_quantities_at(
             load_impedance_ohm,
             field_current_pu,
@@ -150,6 +151,12 @@ class DynamicSimulation:
             load_impedance_imag_ohm=np.imag(load_impedance_ohm).astype(float),
             load_impedance_magnitude_ohm=np.abs(load_impedance_ohm).astype(float),
             load_impedance_angle_deg=np.rad2deg(np.angle(load_impedance_ohm)).astype(float),
+            load_admittance_real_pu=np.real(load_admittance_pu).astype(float),
+            load_admittance_imag_pu=np.imag(load_admittance_pu).astype(float),
+            load_admittance_magnitude_pu=np.abs(load_admittance_pu).astype(float),
+            load_admittance_angle_deg=np.rad2deg(np.angle(load_admittance_pu)).astype(float),
+            load_conductance_pu=np.real(load_admittance_pu).astype(float),
+            load_susceptance_pu=np.imag(load_admittance_pu).astype(float),
             mechanical_power_reference_pu=mechanical_power_reference_pu,
             field_current_pu=field_current_pu,
             internal_voltage_ll_rms=terminal_quantities["internal_voltage_ll_rms"],
@@ -186,6 +193,7 @@ class DynamicSimulation:
         theta_rad = state_matrix[3]
         field_current_pu = state_matrix[4]
         impedance_ohm = np.asarray(self.load.impedance_at(time_s), dtype=complex)
+        admittance_pu = np.asarray(self.load.admittance_pu_at(time_s), dtype=complex)
         terminal_quantities = self.electrical_model.terminal_quantities_at(
             impedance_ohm,
             field_current_pu,
@@ -216,6 +224,10 @@ class DynamicSimulation:
                 "impedance_imag_ohm": np.imag(impedance_ohm),
                 "impedance_magnitude_ohm": np.abs(impedance_ohm),
                 "impedance_angle_deg": np.rad2deg(np.angle(impedance_ohm)),
+                "admittance_real_pu": np.real(admittance_pu),
+                "admittance_imag_pu": np.imag(admittance_pu),
+                "admittance_magnitude_pu": np.abs(admittance_pu),
+                "admittance_angle_deg": np.rad2deg(np.angle(admittance_pu)),
                 "internal_voltage_ll_rms": terminal_quantities["internal_voltage_ll_rms"],
                 "terminal_voltage_ll_rms": terminal_quantities["terminal_voltage_ll_rms"],
                 "load_current_phase_rms": terminal_quantities["load_current_phase_rms"],

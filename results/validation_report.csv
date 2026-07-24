@@ -1,14 +1,14 @@
 status,check,value,unit
 PASS,Initial frequency is approximately 60 Hz,0.0,Hz error
-PASS,Initial mechanical and electrical powers are equal,5.551115123125783e-17,pu error
-PASS,Frequency initially follows the first impedance-change power imbalance,-0.6036644926090631,Hz change
+PASS,Initial mechanical and electrical powers are equal,2.7755575615628914e-16,pu error
+PASS,Frequency initially follows the first load-change power imbalance,-0.6036644926090631,Hz change
 PASS,Mechanical power remains constant without a speed regulator,0.0,pu change
-PASS,Initial terminal voltage is nominal in open-loop excitation,0.0,V LL RMS error
+PASS,Initial terminal voltage is nominal in open-loop excitation,1.1368683772161603e-13,V LL RMS error
 PASS,Field current remains constant in open-loop excitation,0.0,pu change
-PASS,Terminal voltage drops after the first impedance change,40.012540314388616,V LL RMS drop
-WARNING,Final frequency reaches the theoretical open-loop equilibrium,2.254994554938321,Hz error
-PASS,Frequency decreases after the second impedance change,-1.163968457854196,Hz change
+PASS,Terminal voltage drops after the first load change,40.01254031438856,V LL RMS drop
+WARNING,Final frequency reaches the theoretical open-loop equilibrium,2.2549945549383494,Hz error
+PASS,Frequency decreases after the second load change,-1.163968457854196,Hz change
 PASS,Frequency increases after the third load restoration,0.903327872856508,Hz change
 PASS,Three phase voltages are displaced by approximately 120 degrees,0.5662796583798979,degree error
-PASS,Total instantaneous power varies smoothly for a balanced impedance load,0.003535656394331739,relative standard deviation
+PASS,Total instantaneous power varies smoothly for a balanced load,0.003535656394331743,relative standard deviation
 PASS,Energy and power signs are consistent immediately after the disturbance,-0.05139307306621326,pu/s speed derivative

@@ -124,34 +124,63 @@ def generate_all_figures(
         figsize=(9.0, 6.2),
         sharex=True,
     )
-    magnitude_line, = impedance_magnitude_axis.plot(
-        results.time_s,
-        results.load_impedance_magnitude_ohm,
-        label="|Z|",
-    )
-    real_line, = impedance_magnitude_axis.plot(
-        results.time_s,
-        results.load_impedance_real_ohm,
-        label="Re(Z)",
-    )
-    imaginary_line, = impedance_magnitude_axis.plot(
-        results.time_s,
-        results.load_impedance_imag_ohm,
-        label="Im(Z)",
-    )
-    angle_line, = impedance_angle_axis.plot(
-        results.time_s,
-        results.load_impedance_angle_deg,
-        color="tab:purple",
-        label="Angle",
-    )
+    if config.LOAD_MODEL == "parallel_admittance":
+        magnitude_line, = impedance_magnitude_axis.plot(
+            results.time_s,
+            results.load_admittance_magnitude_pu,
+            label="|Y|",
+        )
+        real_line, = impedance_magnitude_axis.plot(
+            results.time_s,
+            results.load_admittance_real_pu,
+            label="G",
+        )
+        imaginary_line, = impedance_magnitude_axis.plot(
+            results.time_s,
+            results.load_admittance_imag_pu,
+            label="B",
+        )
+        angle_line, = impedance_angle_axis.plot(
+            results.time_s,
+            results.load_admittance_angle_deg,
+            color="tab:purple",
+            label="Angle",
+        )
+        magnitude_title = "Load Admittance Versus Time"
+        angle_title = "Load Admittance Angle Versus Time"
+        magnitude_ylabel = "Admittance (pu)"
+    else:
+        magnitude_line, = impedance_magnitude_axis.plot(
+            results.time_s,
+            results.load_impedance_magnitude_ohm,
+            label="|Z|",
+        )
+        real_line, = impedance_magnitude_axis.plot(
+            results.time_s,
+            results.load_impedance_real_ohm,
+            label="Re(Z)",
+        )
+        imaginary_line, = impedance_magnitude_axis.plot(
+            results.time_s,
+            results.load_impedance_imag_ohm,
+            label="Im(Z)",
+        )
+        angle_line, = impedance_angle_axis.plot(
+            results.time_s,
+            results.load_impedance_angle_deg,
+            color="tab:purple",
+            label="Angle",
+        )
+        magnitude_title = "Load Impedance Magnitude Versus Time"
+        angle_title = "Load Impedance Angle Versus Time"
+        magnitude_ylabel = "Impedance (ohm)"
     for step_index, step_time_s in enumerate(config.load_step_times_s, start=1):
         for axis in (impedance_magnitude_axis, impedance_angle_axis):
             axis.axvline(step_time_s, linestyle="--", label=f"_Load step {step_index}")
-    impedance_magnitude_axis.set_title("Load Impedance Magnitude Versus Time")
-    impedance_angle_axis.set_title("Load Impedance Angle Versus Time")
+    impedance_magnitude_axis.set_title(magnitude_title)
+    impedance_angle_axis.set_title(angle_title)
     impedance_angle_axis.set_xlabel("Time (s)")
-    impedance_magnitude_axis.set_ylabel("Impedance (ohm)")
+    impedance_magnitude_axis.set_ylabel(magnitude_ylabel)
     impedance_angle_axis.set_ylabel("Angle (deg)")
     for axis in (impedance_magnitude_axis, impedance_angle_axis):
         axis.grid(True, alpha=0.5)
